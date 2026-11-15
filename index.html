@@ -34,6 +34,7 @@ body{display:flex;flex-direction:column;justify-content:center;align-items:cente
 .ts{font-size:26px;font-weight:600;color:var(--sea)}
 .ts.late{color:var(--late)}
 .ts.bad{color:var(--bad)}
+.ts.plan{color:var(--soft);font-weight:400}
 .tmsg{font-size:22px;color:var(--soft)}
 #stand{font-size:15px;color:var(--soft);margin-top:18px}
 @media (orientation:portrait){.time{font-size:130px}.ic{font-size:44px}.t{font-size:36px}.lbl{font-size:20px}.p{font-size:19px}.c{font-size:15px}.tt{width:100px;font-size:32px}.tl{width:100px;font-size:22px}.tg{display:none}.ta{width:150px;font-size:20px}.ts{font-size:22px}}
@@ -51,13 +52,12 @@ body{display:flex;flex-direction:column;justify-content:center;align-items:cente
 <script>
 // ===== Einstellungen =====
 var LAT = 51.96, LON = 7.63;                    // Münster
-var API = "https://v6.db.transport.rest";       // freier Community-Dienst für Bahn-Daten
-var FROM_NAME = "Münster(Westf)Hbf", FROM_MUST = "Münster";
-var TO_NAME = "Rheine", TO_MUST = "Rheine";
+var API = "https://api.transitous.org/api";     // Transitous: freier Fahrplan-Dienst
+var FROM_TEXT = "Münster Hbf", TO_TEXT = "Rheine Bahnhof";
 // =========================
 
 var WX = [[0,"Klar","☀️"],[2,"Heiter","🌤️"],[3,"Bedeckt","☁️"],[48,"Nebel","🌫️"],[57,"Nieselregen","🌦️"],[67,"Regen","🌧️"],[77,"Schnee","❄️"],[82,"Schauer","🌦️"],[86,"Schneeschauer","🌨️"],[99,"Gewitter","⛈️"]];
-var IDS = {};
+var IDS = {}, TRAINS = null;
 function $(id){return document.getElementById(id)}
 function hm(d){return d.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})}
 function wx(c){for(var i=0;i<WX.length;i++){if(c<=WX[i][0])return WX[i]}return WX[0]}
@@ -66,6 +66,7 @@ function tick(){
   var n=new Date();
   $("time").textContent=hm(n);
   $("date").textContent=n.toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"});
+  renderTrains();
 }
 
 /* ---------- Wetter ---------- */
@@ -88,51 +89,70 @@ function loadWeather(){
       h+=slot(hrs[j].slice(11,16),wx(H.weathercode[j]),Math.round(H.temperature_2m[j]),H.precipitation_probability[j],false);
     }
     $("row").innerHTML=h;
-    $("stand").textContent="💧 = Niederschlagswahrscheinlichkeit. Wetter aktualisiert um "+hm(new Date());
+    $("stand").textContent="💧 = Niederschlagswahrscheinlichkeit. Wetter aktualisiert um "+hm(new Date())+". Zugdaten: Transitous, transitous.org/sources";
   })
   .catch(function(){$("row").innerHTML='<div class="slot now"><div class="lbl">Wetter nicht erreichbar. Prüfe die Internetverbindung des iPads.</div></div>'});
 }
 
 /* ---------- Züge ---------- */
-function pick(list,must){
-  var a=list.filter(function(x){return x.type==="stop"&&x.name&&x.name.indexOf(must)===0});
-  var rail=a.filter(function(x){var p=x.products;return p&&(p.regional||p.regionalExp||p.regionalExpress||p.national||p.nationalExpress)});
-  return (rail[0]||a[0]||{}).id;
+function stopId(text,must){
+  if(IDS[text])return Promise.resolve(IDS[text]);
+  return fetch(API+"/v1/geocode?text="+encodeURIComponent(text)+"&type=STOP")
+  .then(function(r){if(!r.ok)throw new Error("Haltestellensuche "+r.status);return r.json()})
+  .then(function(l){
+    var a=l.filter(function(x){return x.name&&x.name.indexOf(must)===0});
+    var b=a.filter(function(x){return /Hbf|Bahnhof/.test(x.name)});
+    var h=b[0]||a[0];
+    if(!h)throw new Error("Haltestelle nicht gefunden: "+text);
+    IDS[text]=h.id;return h.id;
+  });
 }
 
-function stopId(name,must){
-  if(IDS[name])return Promise.resolve(IDS[name]);
-  return fetch(API+"/locations?query="+encodeURIComponent(name)+"&results=5&stops=true&addresses=false&poi=false")
-  .then(function(r){return r.json()})
-  .then(function(l){var id=pick(l,must);if(!id)throw new Error("stop");IDS[name]=id;return id});
+function trainRow(t){
+  var st;
+  if(t.cancelled)st='<span class="ts bad">fällt aus</span>';
+  else if(!t.live)st='<span class="ts plan">Fahrplan</span>';
+  else st=t.delay>0?'<span class="ts late">+'+t.delay+' Min</span>':'<span class="ts">pünktlich</span>';
+  return '<div class="tr"><span class="tt">'+hm(t.dep)+'</span><span class="tl">'+t.line+'</span><span class="tg">'+(t.track?"Gleis "+t.track:"")+'</span><span class="ta">an '+hm(t.arr)+'</span>'+st+'</div>';
 }
 
-function trainRow(j){
-  var l=j.legs.filter(function(x){return !x.walking})[0];
-  var dep=new Date(l.departure||l.plannedDeparture),arr=new Date(l.arrival||l.plannedArrival);
-  var dl=Math.round((l.departureDelay||0)/60),pl=l.departurePlatform||l.plannedDeparturePlatform;
-  var st=l.cancelled?'<span class="ts bad">fällt aus</span>':(dl>0?'<span class="ts late">+'+dl+' Min</span>':'<span class="ts">pünktlich</span>');
-  return '<div class="tr"><span class="tt">'+hm(dep)+'</span><span class="tl">'+((l.line&&l.line.name)||"Zug")+'</span><span class="tg">'+(pl?"Gleis "+pl:"")+'</span><span class="ta">an '+hm(arr)+'</span>'+st+'</div>';
+function renderTrains(){
+  if(!TRAINS)return;
+  var now=Date.now();
+  var list=TRAINS.filter(function(t){return t.dep.getTime()>=now-30000}).slice(0,2);
+  $("trains").innerHTML=list.length?list.map(trainRow).join(""):'<div class="tmsg">Keine direkte Verbindung in Sicht.</div>';
 }
 
 function loadTrains(){
-  Promise.all([stopId(FROM_NAME,FROM_MUST),stopId(TO_NAME,TO_MUST)])
+  Promise.all([stopId(FROM_TEXT,"Münster"),stopId(TO_TEXT,"Rheine")])
   .then(function(ids){
-    return fetch(API+"/journeys?from="+ids[0]+"&to="+ids[1]+"&results=6&transfers=0&language=de");
+    return fetch(API+"/v6/plan?fromPlace="+encodeURIComponent(ids[0])+"&toPlace="+encodeURIComponent(ids[1])+"&numItineraries=6&maxTransfers=0");
   })
-  .then(function(r){if(!r.ok)throw new Error("http");return r.json()})
+  .then(function(r){if(!r.ok)throw new Error("Verbindungssuche "+r.status);return r.json()})
   .then(function(d){
-    var direct=(d.journeys||[]).filter(function(j){
-      return j.legs.filter(function(x){return !x.walking}).length===1;
-    }).slice(0,2);
-    $("trains").innerHTML=direct.length?direct.map(trainRow).join(""):'<div class="tmsg">Keine direkte Verbindung in Sicht.</div>';
+    var out=[];
+    (d.itineraries||[]).forEach(function(it){
+      var legs=it.legs.filter(function(l){return l.mode!=="WALK"&&l.mode!=="BIKE"&&l.mode!=="CAR"});
+      if(legs.length!==1||!/RAIL|TRAIN|LONG_DISTANCE|SUBURBAN/i.test(legs[0].mode))return;
+      var l=legs[0],dl=Math.round((new Date(l.startTime)-new Date(l.scheduledStartTime))/60000);
+      out.push({
+        dep:new Date(l.startTime),arr:new Date(l.endTime),
+        delay:isNaN(dl)?0:dl,live:!!l.realTime,cancelled:!!l.cancelled,
+        line:l.routeShortName||l.displayName||"Zug",
+        track:(l.from&&(l.from.track||l.from.scheduledTrack))||""
+      });
+    });
+    out.sort(function(x,y){return x.dep-y.dep});
+    TRAINS=out;renderTrains();
   })
-  .catch(function(){$("trains").innerHTML='<div class="tmsg">Zugdaten nicht erreichbar. Der Dienst ist eventuell gerade gestört, die Seite versucht es automatisch erneut.</div>'});
+  .catch(function(e){
+    if(!TRAINS)$("trains").innerHTML='<div class="tmsg">Zugdaten nicht erreichbar ('+(e&&e.message?e.message:"Fehler")+'). Die Seite versucht es automatisch erneut.</div>';
+  });
 }
 
 tick();setInterval(tick,10000);
 loadWeather();setInterval(loadWeather,900000);
-loadTrains();setInterval(loadTrains,60000);
+loadTrains();setInterval(loadTrains,300000);
 </script>
 </body>
 </html>
