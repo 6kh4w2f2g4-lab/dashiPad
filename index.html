@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Münster">
+<title>Münster</title>
+<style>
+:root{--bg:#e9eef1;--ink:#13293d;--soft:#5b6f80;--line:#c5d1d9;--sea:#1b6f82}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif;-webkit-text-size-adjust:100%}
+body{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:24px 32px}
+.time{font:500 190px/1 "Avenir Next Condensed","Avenir Next","Helvetica Neue",Arial,sans-serif;letter-spacing:-3px}
+.date{font-size:32px;color:var(--soft);margin:8px 0 44px}
+.row{display:flex;width:100%;max-width:960px}
+.slot{flex:1;margin-right:14px;padding:16px 6px 8px;border-top:3px solid var(--line)}
+.slot:last-child{margin-right:0}
+.slot.now{border-top-color:var(--sea)}
+.lbl{font-size:26px;color:var(--soft)}
+.now .lbl{color:var(--sea);font-weight:600}
+.ic{font-size:68px;margin:10px 0 6px}
+.t{font-size:58px;font-weight:600;line-height:1}
+.c{font-size:20px;color:var(--soft);margin-top:8px}
+.p{font-size:26px;color:var(--sea);margin-top:8px}
+#stand{font-size:16px;color:var(--soft);margin-top:30px}
+@media (orientation:portrait){.time{font-size:150px}.ic{font-size:48px}.t{font-size:40px}.lbl{font-size:22px}.p{font-size:20px}.c{font-size:16px}}
+</style>
+</head>
+<body>
+<div class="time" id="time">--:--</div>
+<div class="date" id="date"></div>
+<div class="row" id="row"><div class="slot now"><div class="lbl">Wetter wird geladen …</div></div></div>
+<div id="stand"></div>
+<script>
+// Münster
+var LAT = 51.96, LON = 7.63;
+var WX = [[0,"Klar","☀️"],[2,"Heiter","🌤️"],[3,"Bedeckt","☁️"],[48,"Nebel","🌫️"],[57,"Nieselregen","🌦️"],[67,"Regen","🌧️"],[77,"Schnee","❄️"],[82,"Schauer","🌦️"],[86,"Schneeschauer","🌨️"],[99,"Gewitter","⛈️"]];
+function $(id){return document.getElementById(id)}
+function hm(d){return d.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})}
+function wx(c){for(var i=0;i<WX.length;i++){if(c<=WX[i][0])return WX[i]}return WX[0]}
+
+function tick(){
+  var n=new Date();
+  $("time").textContent=hm(n);
+  $("date").textContent=n.toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"});
+}
+
+function slot(label,w,temp,rain,isNow){
+  return '<div class="slot'+(isNow?' now':'')+'"><div class="lbl">'+label+'</div><div class="ic">'+w[2]+'</div><div class="t">'+temp+'°</div><div class="c">'+w[1]+'</div><div class="p">💧 '+rain+' %</div></div>';
+}
+
+function loadWeather(){
+  fetch("https://api.open-meteo.com/v1/forecast?latitude="+LAT+"&longitude="+LON+"&current_weather=true&hourly=temperature_2m,weathercode,precipitation_probability&timezone=auto&forecast_days=2")
+  .then(function(r){return r.json()})
+  .then(function(d){
+    var c=d.current_weather,H=d.hourly,hrs=H.time,idx=0,i,j,k,h="",start;
+    for(i=0;i<hrs.length;i++){if(hrs[i].slice(0,13)===c.time.slice(0,13)){idx=i;break}}
+    h+=slot("Jetzt",wx(c.weathercode),Math.round(c.temperature),H.precipitation_probability[idx],true);
+    // erster Zeitpunkt: jetzt + 2 Stunden, auf volle Stunde aufgerundet; danach alle 2 Stunden
+    start=idx+2+(new Date().getMinutes()>0?1:0);
+    for(k=0;k<4;k++){
+      j=start+2*k;
+      if(j>=hrs.length)break;
+      h+=slot(hrs[j].slice(11,16),wx(H.weathercode[j]),Math.round(H.temperature_2m[j]),H.precipitation_probability[j],false);
+    }
+    $("row").innerHTML=h;
+    $("stand").textContent="💧 = Niederschlagswahrscheinlichkeit. Wetter aktualisiert um "+hm(new Date());
+  })
+  .catch(function(){$("row").innerHTML='<div class="slot now"><div class="lbl">Wetter nicht erreichbar. Prüfe die Internetverbindung des iPads.</div></div>'});
+}
+
+tick();setInterval(tick,10000);
+loadWeather();setInterval(loadWeather,900000);
+</script>
+</body>
+</html>
