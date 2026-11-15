@@ -37,11 +37,20 @@ body {
 }
 
 .dashboard {
-  width: 120%;
+  width: 100%;
   max-width: 740px;
   display: flex;
   flex-direction: column;
-  gap: 50px;
+  /* gap: 25px; <--- Diese Zeile löschen oder auskommentieren */
+}
+
+/* Neuer, absolut zuverlässiger Abstand für alle Kacheln untereinander */
+.dashboard > * {
+  margin-bottom: 25px; /* <--- HIER den Abstand verändern (z.B. 16px, 24px oder 32px) */
+}
+
+.dashboard > *:last-child {
+  margin-bottom: 0;
 }
 
 /* Ganz oben zentral (keine Kachel) */
