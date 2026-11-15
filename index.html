@@ -8,35 +8,56 @@
 <meta name="apple-mobile-web-app-title" content="Münster">
 <title>Münster</title>
 <style>
-:root{--bg:#e9eef1;--ink:#13293d;--soft:#5b6f80;--line:#c5d1d9;--sea:#1b6f82}
+:root{--bg:#e9eef1;--ink:#13293d;--soft:#5b6f80;--line:#c5d1d9;--sea:#1b6f82;--late:#b8650a;--bad:#b3261e}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif;-webkit-text-size-adjust:100%}
-body{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:24px 32px}
-.time{font:500 190px/1 "Avenir Next Condensed","Avenir Next","Helvetica Neue",Arial,sans-serif;letter-spacing:-3px}
-.date{font-size:32px;color:var(--soft);margin:8px 0 44px}
+body{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px 32px}
+.time{font:500 150px/1 "Avenir Next Condensed","Avenir Next","Helvetica Neue",Arial,sans-serif;letter-spacing:-2px}
+.date{font-size:30px;color:var(--soft);margin:6px 0 26px}
 .row{display:flex;width:100%;max-width:960px}
-.slot{flex:1;margin-right:14px;padding:16px 6px 8px;border-top:3px solid var(--line)}
+.slot{flex:1;margin-right:14px;padding:12px 6px 6px;border-top:3px solid var(--line)}
 .slot:last-child{margin-right:0}
 .slot.now{border-top-color:var(--sea)}
-.lbl{font-size:26px;color:var(--soft)}
+.lbl{font-size:24px;color:var(--soft)}
 .now .lbl{color:var(--sea);font-weight:600}
-.ic{font-size:68px;margin:10px 0 6px}
-.t{font-size:58px;font-weight:600;line-height:1}
-.c{font-size:20px;color:var(--soft);margin-top:8px}
-.p{font-size:26px;color:var(--sea);margin-top:8px}
-#stand{font-size:16px;color:var(--soft);margin-top:30px}
-@media (orientation:portrait){.time{font-size:150px}.ic{font-size:48px}.t{font-size:40px}.lbl{font-size:22px}.p{font-size:20px}.c{font-size:16px}}
+.ic{font-size:54px;margin:6px 0 4px}
+.t{font-size:48px;font-weight:600;line-height:1}
+.c{font-size:19px;color:var(--soft);margin-top:6px}
+.p{font-size:24px;color:var(--sea);margin-top:6px}
+.trains{width:100%;max-width:960px;margin-top:26px;padding-top:14px;border-top:2px solid var(--line);text-align:left}
+.th{font-size:22px;font-weight:600;color:var(--soft);margin-bottom:8px}
+.tr{display:flex;align-items:baseline;margin-bottom:6px}
+.tt{width:130px;font-size:40px;font-weight:600}
+.tl{width:130px;font-size:26px}
+.tg{width:120px;font-size:24px;color:var(--soft)}
+.ta{width:200px;font-size:24px;color:var(--soft)}
+.ts{font-size:26px;font-weight:600;color:var(--sea)}
+.ts.late{color:var(--late)}
+.ts.bad{color:var(--bad)}
+.tmsg{font-size:22px;color:var(--soft)}
+#stand{font-size:15px;color:var(--soft);margin-top:18px}
+@media (orientation:portrait){.time{font-size:130px}.ic{font-size:44px}.t{font-size:36px}.lbl{font-size:20px}.p{font-size:19px}.c{font-size:15px}.tt{width:100px;font-size:32px}.tl{width:100px;font-size:22px}.tg{display:none}.ta{width:150px;font-size:20px}.ts{font-size:22px}}
 </style>
 </head>
 <body>
 <div class="time" id="time">--:--</div>
 <div class="date" id="date"></div>
 <div class="row" id="row"><div class="slot now"><div class="lbl">Wetter wird geladen …</div></div></div>
+<div class="trains">
+  <div class="th">Münster Hbf nach Rheine</div>
+  <div id="trains"><div class="tmsg">Verbindungen werden geladen …</div></div>
+</div>
 <div id="stand"></div>
 <script>
-// Münster
-var LAT = 51.96, LON = 7.63;
+// ===== Einstellungen =====
+var LAT = 51.96, LON = 7.63;                    // Münster
+var API = "https://v6.db.transport.rest";       // freier Community-Dienst für Bahn-Daten
+var FROM_NAME = "Münster(Westf)Hbf", FROM_MUST = "Münster";
+var TO_NAME = "Rheine", TO_MUST = "Rheine";
+// =========================
+
 var WX = [[0,"Klar","☀️"],[2,"Heiter","🌤️"],[3,"Bedeckt","☁️"],[48,"Nebel","🌫️"],[57,"Nieselregen","🌦️"],[67,"Regen","🌧️"],[77,"Schnee","❄️"],[82,"Schauer","🌦️"],[86,"Schneeschauer","🌨️"],[99,"Gewitter","⛈️"]];
+var IDS = {};
 function $(id){return document.getElementById(id)}
 function hm(d){return d.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})}
 function wx(c){for(var i=0;i<WX.length;i++){if(c<=WX[i][0])return WX[i]}return WX[0]}
@@ -47,6 +68,7 @@ function tick(){
   $("date").textContent=n.toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"});
 }
 
+/* ---------- Wetter ---------- */
 function slot(label,w,temp,rain,isNow){
   return '<div class="slot'+(isNow?' now':'')+'"><div class="lbl">'+label+'</div><div class="ic">'+w[2]+'</div><div class="t">'+temp+'°</div><div class="c">'+w[1]+'</div><div class="p">💧 '+rain+' %</div></div>';
 }
@@ -71,8 +93,46 @@ function loadWeather(){
   .catch(function(){$("row").innerHTML='<div class="slot now"><div class="lbl">Wetter nicht erreichbar. Prüfe die Internetverbindung des iPads.</div></div>'});
 }
 
+/* ---------- Züge ---------- */
+function pick(list,must){
+  var a=list.filter(function(x){return x.type==="stop"&&x.name&&x.name.indexOf(must)===0});
+  var rail=a.filter(function(x){var p=x.products;return p&&(p.regional||p.regionalExp||p.regionalExpress||p.national||p.nationalExpress)});
+  return (rail[0]||a[0]||{}).id;
+}
+
+function stopId(name,must){
+  if(IDS[name])return Promise.resolve(IDS[name]);
+  return fetch(API+"/locations?query="+encodeURIComponent(name)+"&results=5&stops=true&addresses=false&poi=false")
+  .then(function(r){return r.json()})
+  .then(function(l){var id=pick(l,must);if(!id)throw new Error("stop");IDS[name]=id;return id});
+}
+
+function trainRow(j){
+  var l=j.legs.filter(function(x){return !x.walking})[0];
+  var dep=new Date(l.departure||l.plannedDeparture),arr=new Date(l.arrival||l.plannedArrival);
+  var dl=Math.round((l.departureDelay||0)/60),pl=l.departurePlatform||l.plannedDeparturePlatform;
+  var st=l.cancelled?'<span class="ts bad">fällt aus</span>':(dl>0?'<span class="ts late">+'+dl+' Min</span>':'<span class="ts">pünktlich</span>');
+  return '<div class="tr"><span class="tt">'+hm(dep)+'</span><span class="tl">'+((l.line&&l.line.name)||"Zug")+'</span><span class="tg">'+(pl?"Gleis "+pl:"")+'</span><span class="ta">an '+hm(arr)+'</span>'+st+'</div>';
+}
+
+function loadTrains(){
+  Promise.all([stopId(FROM_NAME,FROM_MUST),stopId(TO_NAME,TO_MUST)])
+  .then(function(ids){
+    return fetch(API+"/journeys?from="+ids[0]+"&to="+ids[1]+"&results=6&transfers=0&language=de");
+  })
+  .then(function(r){if(!r.ok)throw new Error("http");return r.json()})
+  .then(function(d){
+    var direct=(d.journeys||[]).filter(function(j){
+      return j.legs.filter(function(x){return !x.walking}).length===1;
+    }).slice(0,2);
+    $("trains").innerHTML=direct.length?direct.map(trainRow).join(""):'<div class="tmsg">Keine direkte Verbindung in Sicht.</div>';
+  })
+  .catch(function(){$("trains").innerHTML='<div class="tmsg">Zugdaten nicht erreichbar. Der Dienst ist eventuell gerade gestört, die Seite versucht es automatisch erneut.</div>'});
+}
+
 tick();setInterval(tick,10000);
 loadWeather();setInterval(loadWeather,900000);
+loadTrains();setInterval(loadTrains,60000);
 </script>
 </body>
 </html>
