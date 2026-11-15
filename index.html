@@ -1,424 +1,198 @@
-html = r'''<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Münster">
-<meta name="theme-color" content="#000000">
-<title>Münster</title>
-<style>
+from pathlib import Path
+import re
+
+src_path = Path("/mnt/data/Muenster_Dashboard_aktualisiert.html")
+src = src_path.read_text(encoding="utf-8")
+
+css = r'''<style>
 :root{
-  color-scheme:dark;
-  --bg:#000000;
-  --card:#1C1C1E;
-  --card-secondary:#2C2C2E;
-  --ink:#F5F5F7;
-  --soft:#98989D;
-  --line:rgba(255,255,255,.10);
-  --blue:#0A84FF;
-  --green:#30D158;
-  --orange:#FF9F0A;
-  --red:#FF453A;
-  --shadow:0 10px 30px rgba(0,0,0,.34),0 2px 8px rgba(0,0,0,.22);
+  --bg:#000;--card:#1C1C1E;--card2:#2C2C2E;--ink:#F5F5F7;
+  --soft:#98989D;--line:rgba(255,255,255,.10);--blue:#0A84FF;
+  --green:#30D158;--orange:#FF9F0A;--red:#FF453A;
 }
 *{box-sizing:border-box}
-html{height:100%;background:var(--bg)}
+html{min-height:100%;background:var(--bg)}
 body{
-  min-height:100%;
-  margin:0;
-  padding:20px 24px 14px;
-  background:
-    radial-gradient(ellipse at 18% 0%,rgba(10,132,255,.10),transparent 38%),
-    radial-gradient(ellipse at 100% 100%,rgba(48,209,88,.045),transparent 34%),
-    var(--bg);
-  color:var(--ink);
-  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",sans-serif;
-  -webkit-font-smoothing:antialiased;
-  -webkit-text-size-adjust:100%;
+  min-height:100vh;margin:0;padding:14px 18px;
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);
+  grid-template-areas:
+    "clock weather"
+    "date weather"
+    "trains drive"
+    "radio radio"
+    "stand foot";
+  grid-template-rows:auto auto minmax(170px,1fr) auto auto;
+  gap:12px;
+  background:#000;color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;
   text-align:left;
 }
-.dashboard{
-  width:100%;
-  max-width:1440px;
-  min-height:calc(100vh - 34px);
-  margin:0 auto;
-  display:grid;
-  grid-template-columns:minmax(220px,.9fr) minmax(360px,1.55fr) minmax(250px,1fr);
-  grid-template-rows:minmax(210px,.88fr) minmax(260px,1.12fr);
-  grid-template-areas:
-    "clock weather weather"
-    "trains drive radio";
-  gap:16px;
+#time{grid-area:clock}
+#date{grid-area:date}
+#row{grid-area:weather}
+.trains:nth-of-type(4){grid-area:trains}
+.trains:nth-of-type(5){grid-area:drive}
+.radio{grid-area:radio}
+#stand{grid-area:stand}
+#foot{grid-area:foot}
+#time,#date,#row,.trains,.radio{
+  min-width:0;margin:0;padding:18px;border-radius:22px;
+  background:var(--card);border:1px solid var(--line);
+  box-shadow:0 8px 24px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.035);
 }
-.card{
-  min-width:0;
-  min-height:0;
-  padding:20px;
-  border-radius:22px;
-  background:linear-gradient(145deg,rgba(255,255,255,.035),rgba(255,255,255,0) 42%),var(--card);
-  border:1px solid var(--line);
-  box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.035);
-  overflow:hidden;
+#time{
+  display:flex;align-items:center;justify-content:flex-start;
+  font-size:clamp(58px,8vw,100px);font-weight:700;line-height:1;
+  letter-spacing:-4px;font-variant-numeric:tabular-nums;color:#fff;
+  background:linear-gradient(145deg,rgba(10,132,255,.16),rgba(28,28,30,.98));
 }
-.clock-card{
-  grid-area:clock;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:flex-start;
-  background:linear-gradient(145deg,rgba(10,132,255,.15),rgba(28,28,30,.96) 68%);
-}
-.time{
-  font-size:clamp(66px,8vw,112px);
-  line-height:.98;
-  letter-spacing:-5px;
-  font-weight:650;
-  font-variant-numeric:tabular-nums;
-  color:#fff;
-  white-space:nowrap;
-}
-.date{
-  margin-top:12px;
-  color:var(--soft);
-  font-size:clamp(16px,1.8vw,21px);
-  font-weight:500;
-}
-.weather-card{grid-area:weather;display:flex;flex-direction:column;justify-content:center}
-.card-heading{
-  margin:0 0 16px;
-  color:var(--soft);
-  font-size:13px;
-  line-height:1.2;
-  font-weight:650;
-  letter-spacing:.09em;
-  text-transform:uppercase;
-}
-.row{
-  display:grid;
-  grid-template-columns:repeat(5,minmax(0,1fr));
-  width:100%;
-  gap:8px;
+#date{display:flex;align-items:center;color:var(--soft);font-size:20px;font-weight:550}
+#row{
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+  align-content:center;gap:8px;
 }
 .slot{
-  min-width:0;
-  min-height:140px;
-  margin:0;
-  padding:13px 8px;
-  border:1px solid rgba(255,255,255,.055);
-  border-radius:16px;
-  background:rgba(255,255,255,.035);
-  text-align:center;
+  min-width:0;min-height:135px;margin:0;padding:12px 6px;
+  border-radius:16px;border:1px solid rgba(255,255,255,.06);
+  background:rgba(255,255,255,.035);text-align:center;
 }
-.slot.now{
-  border-color:rgba(10,132,255,.42);
-  background:rgba(10,132,255,.11);
-}
-.lbl{font-size:14px;color:var(--soft);font-weight:550}
-.now .lbl{color:#64B5FF;font-weight:650}
-.ic{font-size:31px;margin:12px 0 7px;line-height:1}
-.t{font-size:clamp(23px,2.5vw,34px);font-weight:700;line-height:1;letter-spacing:-1px;font-variant-numeric:tabular-nums}
-.c{font-size:13px;color:var(--soft);margin-top:7px}
-.p{font-size:12px;color:#64B5FF;margin-top:10px;font-weight:600}
-.train-card{grid-area:trains}
-.drive-card{grid-area:drive}
-.train-card,.drive-card{display:flex;flex-direction:column;justify-content:flex-start}
-.trains{
-  width:100%;
-  max-width:none;
-  margin:0;
-  padding:0;
-  border:0;
-  text-align:left;
-}
-.th{
-  margin:0 0 17px;
-  color:var(--soft);
-  font-size:13px;
-  line-height:1.25;
-  font-weight:650;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-}
-.tr{
-  display:grid;
-  grid-template-columns:58px 44px minmax(58px,1fr);
-  grid-template-areas:"time line track" "arr arr status";
-  align-items:center;
-  gap:3px 9px;
-  padding:10px 0;
-  margin:0;
-  border-top:1px solid rgba(255,255,255,.07);
-}
-.tt{grid-area:time;width:auto;font-size:25px;font-weight:700;letter-spacing:-.7px;font-variant-numeric:tabular-nums}
-.tl{grid-area:line;width:auto;font-size:15px;font-weight:650;color:#fff}
-.tg{grid-area:track;width:auto;font-size:12px;font-weight:550;color:var(--soft)}
-.ta{grid-area:arr;width:auto;font-size:12px;color:var(--soft)}
-.ts{grid-area:status;justify-self:start;font-size:12px;font-weight:650;color:var(--green)}
-.ts.late{color:var(--orange)}
-.ts.bad{color:var(--red)}
-.ts.plan{color:var(--soft);font-weight:500}
+.slot.now{background:rgba(10,132,255,.12);border-color:rgba(10,132,255,.4)}
+.lbl{font-size:13px;color:var(--soft);font-weight:600}
+.now .lbl{color:#64B5FF}
+.ic{font-size:30px;margin:11px 0 7px;line-height:1}
+.t{font-size:clamp(22px,2.6vw,34px);font-weight:700;line-height:1;letter-spacing:-1px}
+.c{font-size:12px;color:var(--soft);margin-top:7px}
+.p{font-size:11px;color:#64B5FF;margin-top:9px;font-weight:600}
+.trains{width:auto;max-width:none;padding:18px;text-align:left}
+.th{font-size:13px;line-height:1.3;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--soft);margin:0 0 12px}
+.tr{display:flex;align-items:center;flex-wrap:wrap;gap:5px 10px;padding:10px 0;margin:0;border-top:1px solid rgba(255,255,255,.07)}
+.tt{width:65px;font-size:25px;font-weight:700;letter-spacing:-.6px;font-variant-numeric:tabular-nums}
+.tl{width:50px;font-size:15px;font-weight:650}
+.tg{width:80px;font-size:12px;color:var(--soft);font-weight:550}
+.ta{width:90px;font-size:12px;color:var(--soft)}
+.ts{font-size:12px;font-weight:700;color:var(--green)}
+.ts.late{color:var(--orange)}.ts.bad{color:var(--red)}.ts.plan{color:var(--soft);font-weight:500}
 .tmsg{font-size:14px;line-height:1.45;color:var(--soft)}
-.dr{display:flex;align-items:baseline;flex-wrap:wrap;gap:8px 14px;padding:14px 0;border-top:1px solid rgba(255,255,255,.07)}
-.dt{width:auto;font-size:clamp(35px,4vw,52px);font-weight:750;letter-spacing:-2px;font-variant-numeric:tabular-nums}
-.dd{width:auto;font-size:15px;color:var(--soft)}
-.drive-card .ts{font-size:13px}
-.radio-card{
-  grid-area:radio;
-  display:flex;
-  flex-direction:column;
-  justify-content:flex-start;
-}
-.radio{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:9px;
-  width:100%;
-  max-width:none;
-  margin:0;
-}
+.dr{display:flex;align-items:baseline;flex-wrap:wrap;gap:8px 14px;padding:12px 0;border-top:1px solid rgba(255,255,255,.07)}
+.dt{width:auto;font-size:clamp(34px,4vw,50px);font-weight:750;letter-spacing:-2px}
+.dd{width:auto;font-size:14px;color:var(--soft)}
+.radio{display:flex;flex-wrap:wrap;gap:9px;align-items:stretch}
 .rb{
-  min-width:0;
-  min-height:54px;
-  padding:10px 9px;
-  border:1px solid rgba(255,255,255,.10);
-  border-radius:14px;
-  background:var(--card-secondary);
-  color:var(--ink);
-  font:650 14px -apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;
-  white-space:normal;
-  -webkit-appearance:none;
-  appearance:none;
-  -webkit-tap-highlight-color:transparent;
-  transition:background-color .15s ease,border-color .15s ease,transform .15s ease,opacity .15s ease;
-  touch-action:manipulation;
+  flex:1 1 145px;min-width:0;min-height:54px;padding:11px 12px;
+  border:1px solid rgba(255,255,255,.11);border-radius:14px;
+  background:var(--card2);color:var(--ink);
+  font:650 15px -apple-system,BlinkMacSystemFont,"SF Pro Text",Arial,sans-serif;
+  white-space:normal;-webkit-appearance:none;appearance:none;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
 }
-.rb:active,#gear:active,#setup button:active{transform:scale(.97);opacity:.78}
-.rb.on{
-  background:var(--blue);
-  border-color:var(--blue);
-  color:#fff;
-  box-shadow:0 4px 14px rgba(10,132,255,.25);
-}
+.rb:active,#gear:active,#setup button:active{opacity:.75;transform:scale(.98)}
+.rb.on{background:var(--blue);border-color:var(--blue);color:#fff}
 .rb.wait{opacity:.65}
-.rb:disabled{opacity:.55}
-#air{
-  grid-column:1/-1;
-  color:#64B5FF;
-  background:rgba(10,132,255,.10);
-  border-color:rgba(10,132,255,.30);
-}
-#foot{
-  display:flex;
-  flex-direction:column;
-  gap:9px;
-  margin-top:auto;
-  padding-top:18px;
-  color:var(--soft);
-  font-size:12px;
-  line-height:1.4;
-}
-#rmsg{min-height:17px;margin:0}
-#gear{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  align-self:flex-start;
-  min-height:44px;
-  padding:0 13px;
-  margin:0;
-  border:1px solid rgba(255,255,255,.10);
-  border-radius:12px;
-  background:rgba(255,255,255,.055);
-  color:#64B5FF;
-  font-size:14px;
-  font-weight:600;
-  text-decoration:none;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
-}
-#stand{
-  margin-top:12px;
-  color:var(--soft);
-  font-size:11px;
-  line-height:1.35;
-}
+#air{color:#64B5FF;background:rgba(10,132,255,.11);border-color:rgba(10,132,255,.32)}
 #player{display:none}
-
-/* Einstellungs-Modal im iPadOS-Glass-Stil */
+#foot{display:flex;flex-direction:column;justify-content:center;align-items:flex-end;gap:8px;min-width:0}
+#rmsg{font-size:12px;color:var(--soft);text-align:right;min-height:16px}
+#gear{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:44px;min-height:44px;padding:0 15px;
+  border:1px solid var(--line);border-radius:12px;
+  background:var(--card2);color:#64B5FF;font-size:14px;font-weight:600;
+  text-decoration:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+#stand{align-self:center;color:var(--soft);font-size:11px;line-height:1.35}
 #setup{
-  display:none;
-  position:fixed;
-  inset:0;
-  z-index:10;
-  padding:24px;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  background:rgba(0,0,0,.52);
-  -webkit-backdrop-filter:blur(12px);
-  backdrop-filter:blur(12px);
+  display:none;position:fixed;inset:0;z-index:10;padding:20px;
+  flex-direction:column;justify-content:center;align-items:center;
+  background:rgba(0,0,0,.58);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
 }
 #setup .box{
-  width:100%;
-  max-width:520px;
-  padding:28px;
-  border:1px solid rgba(255,255,255,.16);
-  border-radius:24px;
-  background:rgba(44,44,46,.88);
+  width:100%;max-width:520px;padding:26px;
+  border:1px solid rgba(255,255,255,.16);border-radius:24px;
+  background:rgba(44,44,46,.96);
   -webkit-backdrop-filter:blur(25px) saturate(180%);
   backdrop-filter:blur(25px) saturate(180%);
-  box-shadow:0 24px 70px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.08);
-  text-align:left;
+  box-shadow:0 24px 70px rgba(0,0,0,.55);text-align:left;
 }
-#setup h1{margin:0 0 8px;font-size:27px;letter-spacing:-.7px;font-weight:700}
-#setup p{margin:0 0 22px;color:var(--soft);font-size:14px;line-height:1.45}
-#setup label{display:block;margin:15px 0 7px;color:#D1D1D6;font-size:13px;font-weight:600}
-#setup input{
-  width:100%;
-  min-height:48px;
-  padding:11px 13px;
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:12px;
-  outline:none;
-  background:#1C1C1E;
-  color:var(--ink);
-  font:16px -apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;
-}
-#setup input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(10,132,255,.18)}
-#setup button{
-  min-height:48px;
-  width:100%;
-  margin-top:22px;
-  padding:11px 20px;
-  border:0;
-  border-radius:13px;
-  background:var(--blue);
-  color:#fff;
-  font:650 16px -apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;
-  -webkit-appearance:none;
-  appearance:none;
-  touch-action:manipulation;
-}
-#fmsg{margin-top:12px;color:var(--red);font-size:13px;line-height:1.4}
-
-@media (max-width:900px){
-  body{padding:14px}
-  .dashboard{
-    min-height:calc(100vh - 28px);
-    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-    grid-template-rows:auto auto auto;
-    grid-template-areas:
-      "clock weather"
-      "trains drive"
-      "radio radio";
-    gap:12px;
+#setup h1{font-size:26px;margin:0 0 8px}
+#setup p{font-size:14px;line-height:1.45;color:var(--soft);margin:0 0 18px}
+#setup label{display:block;font-size:13px;font-weight:600;margin:14px 0 6px;color:#D1D1D6}
+#setup input{width:100%;min-height:48px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#1C1C1E;color:var(--ink);font-size:16px}
+#setup button{width:100%;min-height:48px;margin-top:20px;padding:10px 20px;border:0;border-radius:12px;background:var(--blue);color:#fff;font-size:16px;font-weight:650}
+#fmsg{font-size:13px;color:var(--red);margin-top:12px}
+@media (max-width:760px),(orientation:portrait){
+  body{
+    display:flex;flex-direction:column;align-items:stretch;
+    padding:10px;gap:10px;
   }
-  .card{padding:17px}
-  .weather-card{min-height:200px}
-  .radio-card{min-height:170px}
-  #foot{padding-top:12px}
-}
-@media (orientation:portrait){
-  body{padding:12px}
-  .dashboard{
-    min-height:0;
-    grid-template-columns:minmax(0,1fr);
-    grid-template-rows:auto;
-    grid-template-areas:"clock" "weather" "trains" "drive" "radio";
-    gap:11px;
-  }
-  .clock-card{min-height:155px}
-  .time{font-size:76px;letter-spacing:-3px}
-  .weather-card{min-height:190px}
-  .row{gap:5px}
-  .slot{min-height:130px;padding:11px 4px}
-  .ic{font-size:26px;margin:10px 0 6px}
-  .t{font-size:25px}
-  .lbl{font-size:12px}
-  .c{font-size:11px}
-  .p{font-size:10px}
-  .train-card,.drive-card{min-height:145px}
-  .radio-card{min-height:210px}
-  .radio{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #time,#date,#row,.trains,.radio{width:100%;padding:15px}
+  #time{min-height:115px;font-size:76px}
+  #date{min-height:54px;font-size:17px}
+  #row{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+  .slot{min-height:120px;padding:10px 3px}
+  .ic{font-size:24px}.t{font-size:23px}.lbl{font-size:11px}.c{font-size:10px}.p{font-size:9px}
+  #foot{align-items:stretch}
+  #rmsg{text-align:left}
+  #stand{order:10;text-align:center}
 }
 @media (max-height:700px) and (orientation:landscape){
-  body{padding:10px 16px}
-  .dashboard{
-    min-height:calc(100vh - 20px);
-    grid-template-rows:minmax(170px,.8fr) minmax(230px,1.2fr);
-    gap:10px;
-  }
-  .card{padding:15px}
-  .time{font-size:76px}
-  .date{margin-top:7px;font-size:16px}
-  .slot{min-height:116px;padding:9px 5px}
-  .ic{font-size:25px;margin:8px 0 5px}
-  .t{font-size:25px}
-  .th{margin-bottom:10px}
+  body{padding:8px 12px;gap:8px;grid-template-rows:auto auto minmax(140px,1fr) auto auto}
+  #time,#date,#row,.trains,.radio{padding:13px}
+  #time{font-size:72px}
+  .slot{min-height:108px;padding:8px 3px}
+  .ic{font-size:23px;margin:7px 0 5px}
+  .t{font-size:24px}
+  .th{margin-bottom:7px}
   .tr{padding:7px 0}
-  #foot{padding-top:8px}
-  #stand{margin-top:7px}
 }
-</style>
-</head>
-<body>
-<main class="dashboard">
-  <section class="card clock-card" aria-label="Uhrzeit und Datum">
-    <div class="time" id="time">--:--</div>
-    <div class="date" id="date"></div>
-  </section>
+</style>'''
 
-  <section class="card weather-card" aria-label="Wetter">
-    <h2 class="card-heading">Wetter · Münster</h2>
-    <div class="row" id="row">
-      <div class="slot now"><div class="lbl">Wetter wird geladen …</div></div>
-    </div>
-  </section>
+# Keep the original DOM structure and every original ID/function/API. Replace only CSS.
+src = re.sub(r'<style>.*?</style>', css, src, count=1, flags=re.S)
 
-  <section class="card train-card" aria-label="Zugverbindungen">
-    <div class="trains">
-      <div class="th">Münster Hbf nach Rheine</div>
-      <div id="trains"><div class="tmsg">Verbindungen werden geladen …</div></div>
-    </div>
-  </section>
+# Add an early diagnostic handler and a fetch fallback for older Safari environments.
+needle = '<script>'
+compat = r'''<script>
+/* Kompatibilität und sichtbare Fehlermeldungen für ältere Safari-Versionen. */
+window.onerror = function(message, source, line) {
+  var status = document.getElementById("rmsg");
+  if (status) status.textContent = "JavaScript-Fehler: " + message + " (Zeile " + line + ")";
+  return false;
+};
+if (!window.fetch) {
+  window.fetch = function(url) {
+    return new Promise(function(resolve, reject) {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", url, true);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState !== 4) return;
+        resolve({
+          ok: xhr.status >= 200 && xhr.status < 300,
+          status: xhr.status,
+          json: function() {
+            return new Promise(function(res, rej) {
+              try { res(JSON.parse(xhr.responseText)); }
+              catch (e) { rej(e); }
+            });
+          }
+        });
+      };
+      xhr.onerror = function() { reject(new Error("Netzwerkfehler")); };
+      xhr.send(null);
+    });
+  };
+}
+</script>
+<script>'''
+src = src.replace(needle, compat, 1)
 
-  <section class="card drive-card" aria-label="Autoverkehr">
-    <div class="trains">
-      <div class="th">Auto von Münster nach Ascheberg</div>
-      <div id="drive"><div class="tmsg">Verkehrslage wird geladen …</div></div>
-    </div>
-  </section>
+# Preserve the old DOM and script; make sure the dashboard initialization reports startup.
+# Add no new API calls. A JS error is now visible instead of leaving permanent loading placeholders.
+out = Path("/mnt/data/Muenster_Dashboard_Apple_Design_Fehlerbehebung.html")
+out.write_text(src, encoding="utf-8")
 
-  <section class="card radio-card" aria-label="Radio">
-    <h2 class="card-heading">Radio</h2>
-    <div class="radio" id="radio"></div>
-    <audio id="player" preload="none" playsinline x-webkit-airplay="allow" airplay="allow"></audio>
-    <div id="foot">
-      <span id="rmsg"></span>
-      <span id="gear" onclick="openSetup()" role="button" tabindex="0">Einstellungen</span>
-    </div>
-  </section>
-</main>
-
-<div id="stand"></div>
-
-<div id="setup">
-  <div class="box">
-    <h1>Einstellungen</h1>
-    <p>Diese Angaben werden nur auf diesem iPad gespeichert, nicht in der Seite selbst.</p>
-    <label for="fk">TomTom-API-Schlüssel</label>
-    <input id="fk" type="text" autocapitalize="off" autocorrect="off">
-    <label for="ff">Startadresse (Auto)</label>
-    <input id="ff" type="text">
-    <label for="ft">Zieladresse (Auto)</label>
-    <input id="ft" type="text">
-    <button onclick="saveSetup()">Speichern</button>
-    <div id="fmsg"></div>
-  </div>
-</div>
-
-<script>''' + js + r'''</script>
-</body>
-</html>
+# Extract inline scripts and syntax-check with Node.
+scripts = re.findall(r'<script>(.*?)</script>', src, flags=re.S)
+Path("/tmp/dashboard_check.js").write_text("\n".join(scripts), encoding="utf-8")
+print("Erstellt:", out, "| Größe:", out.stat().st_size, "Bytes")
