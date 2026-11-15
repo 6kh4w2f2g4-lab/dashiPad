@@ -16,10 +16,10 @@
   --soft: #6e6e73;
   --line: rgba(255, 255, 255, 0.8);
   --border-subtle: rgba(0, 0, 0, 0.06);
-  --sea: #007aff;       /* Apple System Blue */
-  --late: #ff9500;      /* Apple System Orange */
-  --bad: #ff3b30;       /* Apple System Red */
-  --success: #34c759;   /* Apple System Green */
+  --sea: #007aff;
+  --late: #ff9500;
+  --bad: #ff3b30;
+  --success: #34c759;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -44,6 +44,28 @@ body {
   gap: 16px;
 }
 
+/* Ganz oben zentral (keine Kachel) */
+.header {
+  text-align: center;
+  padding: 10px 0 4px;
+}
+
+.time {
+  font-size: 72px;
+  font-weight: 700;
+  letter-spacing: -2px;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.date {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--soft);
+  margin-top: 6px;
+  text-transform: capitalize;
+}
+
 /* Allgemeine Kachel (Liquid Glass Optik) */
 .card {
   background: var(--surface);
@@ -55,63 +77,80 @@ body {
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04);
 }
 
-/* Oben: Grid für Uhrzeit & Radio */
+/* Obere Reihe: Nachrichten links, Radio/AirPlay rechts */
 .top-row {
   display: grid;
-  grid-template-columns: 0.8fr 1.2fr;
+  grid-template-columns: 1fr 1fr;
   gap: 16px;
-}
-
-.time-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.time {
-  font-size: 64px;
-  font-weight: 700;
-  letter-spacing: -1.5px;
-  line-height: 1;
-  color: var(--ink);
-}
-
-.date {
-  font-size: 17px;
-  font-weight: 500;
-  color: var(--soft);
-  margin-top: 8px;
-  text-transform: capitalize;
-}
-
-.radio-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
 }
 
 .th-sm {
   font-size: 14px;
   font-weight: 600;
   color: var(--soft);
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.radio {
+/* Nachrichtenfeed */
+.news-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
+.news-item {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: opacity 0.2s;
+}
+
+.news-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.news-item:hover { opacity: 0.7; }
+
+.news-time {
+  font-size: 11px;
+  color: var(--soft);
+}
+
+/* Radio & AirPlay */
+.radio-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.radio-header-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.radio {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .rb {
   width: 100%;
-  min-height: 44px;
-  padding: 10px 14px;
-  font: 600 15px -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  min-height: 40px;
+  padding: 8px 12px;
+  font: 600 14px -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
   border: 1px solid var(--border-subtle);
-  border-radius: 14px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.5);
   color: var(--ink);
   cursor: pointer;
@@ -133,20 +172,21 @@ body {
 .rb.wait { opacity: 0.65; }
 .rb:disabled { opacity: 0.55; }
 
-/* AirPlay zentral darunter */
-.airplay-row {
-  display: flex;
-  justify-content: center;
-}
-
-#air {
-  width: auto;
-  min-width: 200px;
-  justify-content: center;
+/* AirPlay Icon Button */
+.airplay-btn {
+  width: 36px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  justify-content: center !important;
+  align-items: center !important;
   color: var(--sea);
   background: rgba(0, 122, 255, 0.08);
   border-color: rgba(0, 122, 255, 0.2);
+  border-radius: 10px;
+  flex: 0 0 36px;
 }
+.airplay-btn svg { width: 18px; height: 18px; }
 
 /* Wetter-Kachel (volle Breite) */
 .weather-card {
@@ -185,12 +225,12 @@ body {
   font-weight: 600;
 }
 
-.ic { font-size: 28px; margin: 4px 0; }
-.t { font-size: 22px; font-weight: 600; line-height: 1; }
+.ic { font-size: 26px; margin: 4px 0; }
+.t { font-size: 20px; font-weight: 600; line-height: 1; }
 .c { font-size: 12px; color: var(--soft); margin-top: 4px; }
 .p { font-size: 12px; color: var(--sea); margin-top: 4px; font-weight: 500; }
 
-/* Unten: Züge & Verkehr nebeneinander */
+/* Untere Reihe: Züge & Verkehr nebeneinander */
 .bottom-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -203,7 +243,7 @@ body {
 }
 
 .th {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--soft);
   margin-bottom: 12px;
@@ -234,12 +274,12 @@ body {
 }
 
 .tt, .dt {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
 }
 
 .tl, .dd {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--soft);
 }
 
@@ -247,16 +287,16 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--soft);
 }
 
 .tg { font-weight: 500; }
 
 .ts {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  padding: 3px 8px;
+  padding: 2px 6px;
   border-radius: 6px;
   background: rgba(52, 199, 89, 0.15);
   color: var(--success);
@@ -279,7 +319,7 @@ body {
 }
 
 .tmsg {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--soft);
   padding: 8px 0;
 }
@@ -288,15 +328,12 @@ body {
 .footer-card {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px 20px;
-  background: transparent;
-  box-shadow: none;
-  border: none;
+  gap: 4px;
+  padding: 4px 10px;
 }
 
 #stand {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--soft);
   text-align: center;
 }
@@ -306,7 +343,7 @@ body {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--soft);
 }
 
@@ -380,9 +417,7 @@ body {
   outline: none;
 }
 
-#setup input:focus {
-  border-color: var(--sea);
-}
+#setup input:focus { border-color: var(--sea); }
 
 #setup button {
   width: 100%;
@@ -409,21 +444,27 @@ body {
 
 <div class="dashboard">
 
-  <!-- Oben: Uhrzeit/Datum & Radio -->
-  <div class="top-row">
-    <div class="card time-card">
-      <div class="time" id="time">--:--</div>
-      <div class="date" id="date"></div>
-    </div>
-    <div class="card radio-card">
-      <div class="th-sm">Radio</div>
-      <div class="radio" id="radio"></div>
-    </div>
+  <!-- Ganz oben zentral (keine Kachel): Uhrzeit & Datum -->
+  <div class="header">
+    <div class="time" id="time">--:--</div>
+    <div class="date" id="date"></div>
   </div>
 
-  <!-- AirPlay zentriert darunter -->
-  <div class="airplay-row">
-    <button type="button" class="rb" id="air" onclick="airPicker()">AirPlay</button>
+  <!-- Obere Reihe: Nachrichten links, Radio & AirPlay rechts -->
+  <div class="top-row">
+    <div class="card">
+      <div class="th-sm">Nachrichten • DIE ZEIT</div>
+      <div id="news"><div class="tmsg">Laden…</div></div>
+    </div>
+    <div class="card">
+      <div class="radio-header-line">
+        <div class="th-sm" style="margin-bottom:0;">Radio</div>
+        <button type="button" class="rb airplay-btn" id="air" onclick="airPicker()" title="AirPlay">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 2v10h12V4H6zm6 13a2 2 0 0 1 .83.18l4.17 2.08a1 1 0 0 1 .44 1.34l-1 2a1 1 0 0 1-1.34.44L12 21l-3.1 1.04a1 1 0 0 1-1.34-.44l-1-2a1 1 0 0 1 .44-1.34l4.17-2.08A2 2 0 0 1 12 17z"/></svg>
+        </button>
+      </div>
+      <div class="radio" id="radio" style="margin-top:10px;"></div>
+    </div>
   </div>
 
   <!-- Wetter Kachel (volle Breite) -->
@@ -433,14 +474,14 @@ body {
     </div>
   </div>
 
-  <!-- Unten: Züge & Verkehr nebeneinander -->
+  <!-- Untere Reihe: Züge & Verkehr nebeneinander -->
   <div class="bottom-row">
     <div class="card trains">
-      <div class="th">Münster Hbf → Rheine</div>
+      <div class="th">Deutsche Bahn: Münster Hbf -> Rheine Hbf</div>
       <div id="trains"><div class="tmsg">Verbindungen werden geladen …</div></div>
     </div>
     <div class="card drive-box">
-      <div class="th">Auto → Ascheberg</div>
+      <div class="th">Autofahrt: Münster -> Ascheberg</div>
       <div id="drive"><div class="tmsg">Verkehrslage wird geladen …</div></div>
     </div>
   </div>
@@ -492,6 +533,34 @@ function tick(){
   $("time").textContent=hm(n);
   $("date").textContent=n.toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"});
   renderTrains();
+}
+
+/* ---------- Nachrichten ---------- */
+function loadNews() {
+  var rssUrl = encodeURIComponent("https://newsfeed.zeit.de/index");
+  fetch("https://api.rss2json.com/v1/api.json?rss_url=" + rssUrl)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if(d.items && d.items.length > 0) {
+        var h = '<div class="news-list">';
+        for(var i = 0; i < Math.min(3, d.items.length); i++) {
+          var item = d.items[i];
+          var timeStr = "";
+          if(item.pubDate) {
+            var dt = new Date(item.pubDate);
+            timeStr = dt.toLocaleTimeString("de-DE", {hour: "2-digit", minute: "2-digit"}) + " Uhr";
+          }
+          h += '<a href="' + item.link + '" target="_blank" class="news-item"><span>' + item.title + '</span><span class="news-time">' + timeStr + '</span></a>';
+        }
+        h += '</div>';
+        $("news").innerHTML = h;
+      } else {
+        $("news").innerHTML = '<div class="tmsg">Keine Schlagzeilen.</div>';
+      }
+    })
+    .catch(function(e) {
+      $("news").innerHTML = '<div class="tmsg">Nachrichten nicht erreichbar.</div>';
+    });
 }
 
 /* ---------- Wetter ---------- */
@@ -833,6 +902,8 @@ function airPicker(){
 // ===== Start =====
 tick();
 setInterval(tick,10000);
+loadNews();
+setInterval(loadNews,900000);
 loadWeather();
 setInterval(loadWeather,900000);
 loadTrains();
