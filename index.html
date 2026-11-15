@@ -12,32 +12,44 @@
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif;-webkit-text-size-adjust:100%}
 body{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px 32px}
-.time{font:500 150px/1 "Avenir Next Condensed","Avenir Next","Helvetica Neue",Arial,sans-serif;letter-spacing:-2px}
-.date{font-size:30px;color:var(--soft);margin:6px 0 26px}
+.time{font:500 110px/1 "Avenir Next Condensed","Avenir Next","Helvetica Neue",Arial,sans-serif;letter-spacing:-2px}
+.date{font-size:26px;color:var(--soft);margin:4px 0 16px}
 .row{display:flex;width:100%;max-width:960px}
 .slot{flex:1;margin-right:14px;padding:12px 6px 6px;border-top:3px solid var(--line)}
 .slot:last-child{margin-right:0}
 .slot.now{border-top-color:var(--sea)}
-.lbl{font-size:24px;color:var(--soft)}
+.lbl{font-size:22px;color:var(--soft)}
 .now .lbl{color:var(--sea);font-weight:600}
-.ic{font-size:54px;margin:6px 0 4px}
-.t{font-size:48px;font-weight:600;line-height:1}
-.c{font-size:19px;color:var(--soft);margin-top:6px}
-.p{font-size:24px;color:var(--sea);margin-top:6px}
-.trains{width:100%;max-width:960px;margin-top:26px;padding-top:14px;border-top:2px solid var(--line);text-align:left}
-.th{font-size:22px;font-weight:600;color:var(--soft);margin-bottom:8px}
-.tr{display:flex;align-items:baseline;margin-bottom:6px}
-.tt{width:130px;font-size:40px;font-weight:600}
+.ic{font-size:44px;margin:4px 0 2px}
+.t{font-size:40px;font-weight:600;line-height:1}
+.c{font-size:17px;color:var(--soft);margin-top:4px}
+.p{font-size:22px;color:var(--sea);margin-top:4px}
+.trains{width:100%;max-width:960px;margin-top:16px;padding-top:10px;border-top:2px solid var(--line);text-align:left}
+.th{font-size:22px;font-weight:600;color:var(--soft);margin-bottom:6px}
+.tr{display:flex;align-items:baseline;margin-bottom:4px}
+.tt{width:130px;font-size:36px;font-weight:600}
 .tl{width:130px;font-size:26px}
-.tg{width:120px;font-size:24px;color:var(--soft)}
+.tg{width:130px;font-size:26px;font-weight:600}
 .ta{width:200px;font-size:24px;color:var(--soft)}
 .ts{font-size:26px;font-weight:600;color:var(--sea)}
 .ts.late{color:var(--late)}
 .ts.bad{color:var(--bad)}
 .ts.plan{color:var(--soft);font-weight:400}
 .tmsg{font-size:22px;color:var(--soft)}
-#stand{font-size:15px;color:var(--soft);margin-top:18px}
-@media (orientation:portrait){.time{font-size:130px}.ic{font-size:44px}.t{font-size:36px}.lbl{font-size:20px}.p{font-size:19px}.c{font-size:15px}.tt{width:100px;font-size:32px}.tl{width:100px;font-size:22px}.tg{display:none}.ta{width:150px;font-size:20px}.ts{font-size:22px}}
+.dr{display:flex;align-items:baseline}
+.dt{width:170px;font-size:36px;font-weight:600}
+.dd{width:130px;font-size:24px;color:var(--soft)}
+#gear{font-size:15px;color:var(--soft);text-decoration:underline;margin-top:6px}
+#setup{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);padding:40px;flex-direction:column;justify-content:center;align-items:center;z-index:10}
+#setup .box{width:100%;max-width:640px;text-align:left}
+#setup h1{font-size:30px;margin:0 0 6px}
+#setup p{font-size:18px;color:var(--soft);margin:0 0 18px}
+#setup label{display:block;font-size:18px;margin:12px 0 4px}
+#setup input{width:100%;font-size:22px;padding:10px;border:2px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+#setup button{font-size:22px;padding:12px 28px;margin-top:20px;border:0;border-radius:8px;background:var(--sea);color:#fff}
+#fmsg{font-size:18px;color:var(--bad);margin-top:12px}
+#stand{font-size:15px;color:var(--soft);margin-top:12px}
+@media (orientation:portrait){.time{font-size:100px}.ic{font-size:44px}.t{font-size:36px}.lbl{font-size:20px}.p{font-size:19px}.c{font-size:15px}.tt{width:100px;font-size:32px}.tl{width:100px;font-size:22px}.tg{width:90px;font-size:20px}.ta{width:150px;font-size:20px}.ts{font-size:22px}}
 </style>
 </head>
 <body>
@@ -48,7 +60,21 @@ body{display:flex;flex-direction:column;justify-content:center;align-items:cente
   <div class="th">Münster Hbf nach Rheine</div>
   <div id="trains"><div class="tmsg">Verbindungen werden geladen …</div></div>
 </div>
+<div class="trains">
+  <div class="th">Auto von Münster nach Ascheberg</div>
+  <div id="drive"><div class="tmsg">Verkehrslage wird geladen …</div></div>
+</div>
 <div id="stand"></div>
+<div id="gear" onclick="openSetup()">Einstellungen</div>
+<div id="setup"><div class="box">
+  <h1>Einstellungen</h1>
+  <p>Diese Angaben werden nur auf diesem iPad gespeichert, nicht in der Seite selbst.</p>
+  <label for="fk">TomTom-API-Schlüssel</label><input id="fk" type="text" autocapitalize="off" autocorrect="off">
+  <label for="ff">Startadresse (Auto)</label><input id="ff" type="text">
+  <label for="ft">Zieladresse (Auto)</label><input id="ft" type="text">
+  <button onclick="saveSetup()">Speichern</button>
+  <div id="fmsg"></div>
+</div></div>
 <script>
 // ===== Einstellungen =====
 var LAT = 51.96, LON = 7.63;                    // Münster
@@ -113,20 +139,20 @@ function trainRow(t){
   if(t.cancelled)st='<span class="ts bad">fällt aus</span>';
   else if(!t.live)st='<span class="ts plan">Fahrplan</span>';
   else st=t.delay>0?'<span class="ts late">+'+t.delay+' Min</span>':'<span class="ts">pünktlich</span>';
-  return '<div class="tr"><span class="tt">'+hm(t.dep)+'</span><span class="tl">'+t.line+'</span><span class="tg">'+(t.track?"Gleis "+t.track:"")+'</span><span class="ta">an '+hm(t.arr)+'</span>'+st+'</div>';
+  return '<div class="tr"><span class="tt">'+hm(t.dep)+'</span><span class="tl">'+t.line+'</span><span class="tg">'+"Gleis "+(t.track||"–")+'</span><span class="ta">an '+hm(t.arr)+'</span>'+st+'</div>';
 }
 
 function renderTrains(){
   if(!TRAINS)return;
   var now=Date.now();
-  var list=TRAINS.filter(function(t){return t.dep.getTime()>=now-30000}).slice(0,2);
+  var list=TRAINS.filter(function(t){return t.dep.getTime()>=now-30000}).slice(0,3);
   $("trains").innerHTML=list.length?list.map(trainRow).join(""):'<div class="tmsg">Keine direkte Verbindung in Sicht.</div>';
 }
 
 function loadTrains(){
   Promise.all([stopId(FROM_TEXT,"Münster"),stopId(TO_TEXT,"Rheine")])
   .then(function(ids){
-    return fetch(API+"/v6/plan?fromPlace="+encodeURIComponent(ids[0])+"&toPlace="+encodeURIComponent(ids[1])+"&numItineraries=6&maxTransfers=0");
+    return fetch(API+"/v6/plan?fromPlace="+encodeURIComponent(ids[0])+"&toPlace="+encodeURIComponent(ids[1])+"&numItineraries=8&maxTransfers=0");
   })
   .then(function(r){if(!r.ok)throw new Error("Verbindungssuche "+r.status);return r.json()})
   .then(function(d){
@@ -150,9 +176,47 @@ function loadTrains(){
   });
 }
 
+/* ---------- Autoverkehr ---------- */
+var CFGD = null;
+function loadCfg(){try{CFGD=JSON.parse(localStorage.getItem("dash.cfg")||"null")}catch(e){CFGD=null}}
+function saveCfg(c){CFGD=c;try{localStorage.setItem("dash.cfg",JSON.stringify(c))}catch(e){}}
+function openSetup(){
+  $("fk").value=CFGD?CFGD.key:"";$("ff").value=CFGD?CFGD.from:"";$("ft").value=CFGD?CFGD.to:"";
+  $("fmsg").textContent="";$("setup").style.display="flex";
+}
+function saveSetup(){
+  var c={key:$("fk").value.trim(),from:$("ff").value.trim(),to:$("ft").value.trim()};
+  if(!c.key||!c.from||!c.to){$("fmsg").textContent="Bitte alle drei Felder ausfüllen.";return}
+  saveCfg(c);$("setup").style.display="none";loadDrive();
+}
+function geocode(q,key){
+  return fetch("https://api.tomtom.com/search/2/geocode/"+encodeURIComponent(q)+".json?key="+encodeURIComponent(key)+"&countrySet=DE&limit=1")
+  .then(function(r){if(!r.ok)throw new Error("Adresssuche "+r.status);return r.json()})
+  .then(function(d){var x=d.results&&d.results[0];if(!x)throw new Error("Adresse nicht gefunden: "+q);return x.position.lat+","+x.position.lon});
+}
+function loadDrive(){
+  var c=CFGD;
+  if(!c||!c.key){$("drive").innerHTML='<div class="tmsg">Noch nicht eingerichtet. Tippe unten auf „Einstellungen".</div>';return}
+  Promise.all([c.fp?Promise.resolve(c.fp):geocode(c.from,c.key),c.tp?Promise.resolve(c.tp):geocode(c.to,c.key)])
+  .then(function(p){
+    if(!c.fp||!c.tp){c.fp=p[0];c.tp=p[1];saveCfg(c)}
+    return fetch("https://api.tomtom.com/routing/1/calculateRoute/"+p[0]+":"+p[1]+"/json?key="+encodeURIComponent(c.key)+"&traffic=true&travelMode=car&routeType=fastest&routeRepresentation=summaryOnly");
+  })
+  .then(function(r){if(!r.ok)throw new Error("Routenberechnung "+r.status);return r.json()})
+  .then(function(d){
+    var s=d.routes[0].summary,min=Math.round(s.travelTimeInSeconds/60),dl=Math.round((s.trafficDelayInSeconds||0)/60),km=Math.round(s.lengthInMeters/1000),st;
+    if(dl<=2)st='<span class="ts">freie Fahrt</span>';
+    else if(dl<=7)st='<span class="ts late">zäher Verkehr, +'+dl+' Min</span>';
+    else st='<span class="ts bad">Stau, +'+dl+' Min</span>';
+    $("drive").innerHTML='<div class="dr"><span class="dt">'+min+' Min</span><span class="dd">'+km+' km</span>'+st+'</div>';
+  })
+  .catch(function(e){$("drive").innerHTML='<div class="tmsg">Verkehrsdaten nicht erreichbar ('+(e&&e.message?e.message:"Fehler")+'). Prüfe Schlüssel und Adressen unter „Einstellungen".</div>'});
+}
+
 tick();setInterval(tick,10000);
 loadWeather();setInterval(loadWeather,900000);
 loadTrains();setInterval(loadTrains,300000);
+loadCfg();if(!CFGD)openSetup();loadDrive();setInterval(loadDrive,180000);
 </script>
 </body>
 </html>
