@@ -1,11 +1,3 @@
-from pathlib import Path
-import re
-
-src = Path("/mnt/data/Muenster_Dashboard_aktualisiert.html").read_text(encoding="utf-8")
-script_match = re.search(r"<script>(.*?)</script>", src, flags=re.S)
-assert script_match, "JavaScript-Block nicht gefunden"
-js = script_match.group(1)
-
 html = r'''<!DOCTYPE html>
 <html lang="de">
 <head>
@@ -430,8 +422,3 @@ body{
 <script>''' + js + r'''</script>
 </body>
 </html>
-'''
-
-out = Path("/mnt/data/Muenster_Dashboard_Apple_Design.html")
-out.write_text(html, encoding="utf-8")
-print(f"Erstellt: {out} ({out.stat().st_size} Bytes)")
