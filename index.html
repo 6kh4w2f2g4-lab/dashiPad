@@ -41,14 +41,12 @@ body {
   max-width: 740px;
   display: flex;
   flex-direction: column;
-  /* gap: 25px; <--- Diese Zeile löschen oder auskommentieren */
 }
 
-/* Neuer, absolut zuverlässiger Abstand für alle Kacheln untereinander */
+/* Zuverlässige Abstände zwischen allen Kacheln (iPad-sicher ohne gap-Probleme) */
 .dashboard > * {
-  margin-bottom: 25px; /* <--- HIER den Abstand verändern (z.B. 16px, 24px oder 32px) */
+  margin-bottom: 25px;
 }
-
 .dashboard > *:last-child {
   margin-bottom: 0;
 }
@@ -135,12 +133,6 @@ body {
 }
 
 /* Radio & AirPlay */
-.radio-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
 .radio-header-line {
   display: flex;
   justify-content: space-between;
@@ -257,6 +249,17 @@ body {
   color: var(--soft);
   margin-bottom: 12px;
   letter-spacing: -0.2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* DB-Logo Styling für den Titel */
+.db-logo-inline {
+  height: 18px;
+  width: auto;
+  vertical-align: middle;
+  border-radius: 3px;
 }
 
 .tr, .dr {
@@ -264,7 +267,7 @@ body {
   flex-direction: column;
   padding: 10px 0;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  gap: 10px;
+  gap: 4px;
 }
 
 .tr:last-child, .dr:last-child {
@@ -467,12 +470,9 @@ body {
     </div>
     <div class="card">
       <div class="radio-header-line">
-        <div class="th-sm" style="margin-bottom:0;">AirPlay Radio</div>
+        <div class="th-sm" style="margin-bottom:0;">Radio</div>
         <button type="button" class="rb airplay-btn" id="air" onclick="airPicker()" title="AirPlay">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-  <path d="M6 3h12a2 2 0 0 1 2 2v10h-2V5H6v10H4V5a2 2 0 0 1 2-2z"/>
-  <path d="M12 12l-7 9h14l-7-9z"/>
-</svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 2v10h12V4H6zm6 13a2 2 0 0 1 .83.18l4.17 2.08a1 1 0 0 1 .44 1.34l-1 2a1 1 0 0 1-1.34.44L12 21l-3.1 1.04a1 1 0 0 1-1.34-.44l-1-2a1 1 0 0 1 .44-1.34l4.17-2.08A2 2 0 0 1 12 17z"/></svg>
         </button>
       </div>
       <div class="radio" id="radio" style="margin-top:10px;"></div>
@@ -489,7 +489,21 @@ body {
   <!-- Untere Reihe: Züge & Verkehr nebeneinander -->
   <div class="bottom-row">
     <div class="card trains">
-      <div class="th">Deutsche Bahn: Münster Hbf -> Rheine Hbf</div>
+      <div class="th">
+        <svg class="db-logo-inline" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+          <rect width="1024" height="530" fill="#FFFFFF"/>
+          <rect x="267" y="128" width="490" height="336" rx="43" fill="none" stroke="#F01414" stroke-width="39"/>
+          <text x="512" y="414" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="330" font-weight="900" letter-spacing="-12" fill="#F01414">DB</text>
+          <rect x="0" y="530" width="1024" height="494" fill="#F01414"/>
+          <path d="M 432 607 Q 512 570 592 607 Q 640 628 640 786 Q 608 824 562 844 Q 537 857 512 857 Q 487 857 462 844 Q 416 824 384 786 Q 384 628 432 607 Z" fill="white"/>
+          <path d="M 419 670 Q 419 625 512 619 Q 605 625 605 670 Q 601 727 570 739 Q 512 762 454 739 Q 423 727 419 670 Z" fill="#F01414"/>
+          <path d="M 440 770 Q 438 768 448 768 L 463 769 Q 468 770 473 778 L 487 799 L 458 800 Z" fill="#F01414"/>
+          <path d="M 584 770 Q 586 768 576 768 L 561 769 Q 556 770 551 778 L 537 799 L 566 800 Z" fill="#F01414"/>
+          <path d="M 386 819 Q 430 855 464 861 Q 512 868 560 861 Q 594 855 638 819 Q 632 870 614 895 Q 602 913 588 913 L 436 913 Q 422 913 410 895 Q 392 870 386 819 Z" fill="white"/>
+          <path d="M 434 935 L 590 935 L 591 951 Q 512 957 434 951 Z" fill="white"/>
+        </svg>
+        Münster Hbf -> Rheine Hbf
+      </div>
       <div id="trains"><div class="tmsg">Verbindungen werden geladen …</div></div>
     </div>
     <div class="card drive-box">
@@ -645,7 +659,6 @@ function loadTrains(){
       var l=legs[0];
       var lineName = l.routeShortName || l.displayName || "";
       
-      // Filter: Schließe Fernverkehr (ICE, IC, EC) aus und behalte nur Regionalverkehr (RE, RB, S)
       if(/ICE|IC\b|EC\b|Intercity|Eurocity/i.test(lineName)) return;
 
       var dl=Math.round((new Date(l.startTime)-new Date(l.scheduledStartTime))/60000);
