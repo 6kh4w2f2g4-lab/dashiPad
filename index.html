@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -10,10 +11,11 @@
 <style>
 :root{--bg:#e9eef1;--ink:#13293d;--soft:#5b6f80;--line:#c5d1d9;--sea:#1b6f82;--late:#b8650a;--bad:#b3261e}
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif;-webkit-text-size-adjust:100%}
+html{height:100%}body{min-height:100%}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif;-webkit-text-size-adjust:100%}
 body{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px 32px}
-.time{font:500 110px/1 "Avenir Next Condensed","Avenir Next","Helvetica Neue",Arial,sans-serif;letter-spacing:-2px}
-.date{font-size:26px;color:var(--soft);margin:4px 0 16px}
+.time{font:500 96px/1 "Avenir Next Condensed","Avenir Next","Helvetica Neue",Arial,sans-serif;letter-spacing:-2px}
+.date{font-size:24px;color:var(--soft);margin:2px 0 12px}
 .row{display:flex;width:100%;max-width:960px}
 .slot{flex:1;margin-right:14px;padding:12px 6px 6px;border-top:3px solid var(--line)}
 .slot:last-child{margin-right:0}
@@ -48,42 +50,68 @@ body{display:flex;flex-direction:column;justify-content:center;align-items:cente
 #setup input{width:100%;font-size:22px;padding:10px;border:2px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
 #setup button{font-size:22px;padding:12px 28px;margin-top:20px;border:0;border-radius:8px;background:var(--sea);color:#fff}
 #fmsg{font-size:18px;color:var(--bad);margin-top:12px}
+.radio{display:flex;flex-wrap:wrap;gap:8px;width:100%;max-width:960px;margin-top:14px}
+.rb{flex:1 1 145px;min-height:56px;padding:12px 8px;font:600 20px "Avenir Next","Helvetica Neue",Arial,sans-serif;white-space:normal;border:2px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);-webkit-appearance:none;appearance:none}
+.rb.on{background:var(--sea);border-color:var(--sea);color:#fff}
+.rb.wait{opacity:.65}
+.rb:disabled{opacity:.55}
+#air{color:var(--sea);flex:0 1 145px}
+#foot{font-size:15px;color:var(--soft);margin-top:6px}
+#rmsg{margin-right:14px}
 #stand{font-size:15px;color:var(--soft);margin-top:12px}
 @media (orientation:portrait){.time{font-size:100px}.ic{font-size:44px}.t{font-size:36px}.lbl{font-size:20px}.p{font-size:19px}.c{font-size:15px}.tt{width:100px;font-size:32px}.tl{width:100px;font-size:22px}.tg{width:90px;font-size:20px}.ta{width:150px;font-size:20px}.ts{font-size:22px}}
 </style>
 </head>
 <body>
+
 <div class="time" id="time">--:--</div>
 <div class="date" id="date"></div>
 <div class="row" id="row"><div class="slot now"><div class="lbl">Wetter wird geladen …</div></div></div>
+
 <div class="trains">
   <div class="th">Münster Hbf nach Rheine</div>
   <div id="trains"><div class="tmsg">Verbindungen werden geladen …</div></div>
 </div>
+
 <div class="trains">
   <div class="th">Auto von Münster nach Ascheberg</div>
   <div id="drive"><div class="tmsg">Verkehrslage wird geladen …</div></div>
 </div>
+
+<div class="radio" id="radio"></div>
+<audio id="player" preload="none" playsinline x-webkit-airplay="allow" airplay="allow"></audio>
 <div id="stand"></div>
-<div id="gear" onclick="openSetup()">Einstellungen</div>
-<div id="setup"><div class="box">
+
+<div id="foot">
+  <span id="rmsg"></span>
+  <span id="gear" onclick="openSetup()">Einstellungen</span>
+</div>
+
+<div id="setup">
+<div class="box">
   <h1>Einstellungen</h1>
   <p>Diese Angaben werden nur auf diesem iPad gespeichert, nicht in der Seite selbst.</p>
-  <label for="fk">TomTom-API-Schlüssel</label><input id="fk" type="text" autocapitalize="off" autocorrect="off">
-  <label for="ff">Startadresse (Auto)</label><input id="ff" type="text">
-  <label for="ft">Zieladresse (Auto)</label><input id="ft" type="text">
+  <label for="fk">TomTom-API-Schlüssel</label>
+  <input id="fk" type="text" autocapitalize="off" autocorrect="off">
+  <label for="ff">Startadresse (Auto)</label>
+  <input id="ff" type="text">
+  <label for="ft">Zieladresse (Auto)</label>
+  <input id="ft" type="text">
   <button onclick="saveSetup()">Speichern</button>
   <div id="fmsg"></div>
-</div></div>
+</div>
+</div>
+
 <script>
 // ===== Einstellungen =====
-var LAT = 51.96, LON = 7.63;                    // Münster
-var API = "https://api.transitous.org/api";     // Transitous: freier Fahrplan-Dienst
+var LAT = 51.96, LON = 7.63;
+var API = "https://api.transitous.org/api";
 var FROM_TEXT = "Münster Hbf", TO_TEXT = "Rheine Bahnhof";
 // =========================
 
 var WX = [[0,"Klar","☀️"],[2,"Heiter","🌤️"],[3,"Bedeckt","☁️"],[48,"Nebel","🌫️"],[57,"Nieselregen","🌦️"],[67,"Regen","🌧️"],[77,"Schnee","❄️"],[82,"Schauer","🌦️"],[86,"Schneeschauer","🌨️"],[99,"Gewitter","⛈️"]];
 var IDS = {}, TRAINS = null;
+
 function $(id){return document.getElementById(id)}
 function hm(d){return d.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})}
 function wx(c){for(var i=0;i<WX.length;i++){if(c<=WX[i][0])return WX[i]}return WX[0]}
@@ -107,7 +135,6 @@ function loadWeather(){
     var c=d.current_weather,H=d.hourly,hrs=H.time,idx=0,i,j,k,h="",start;
     for(i=0;i<hrs.length;i++){if(hrs[i].slice(0,13)===c.time.slice(0,13)){idx=i;break}}
     h+=slot("Jetzt",wx(c.weathercode),Math.round(c.temperature),H.precipitation_probability[idx],true);
-    // erster Zeitpunkt: jetzt + 2 Stunden, auf volle Stunde aufgerundet; danach alle 2 Stunden
     start=idx+2+(new Date().getMinutes()>0?1:0);
     for(k=0;k<4;k++){
       j=start+2*k;
@@ -117,7 +144,9 @@ function loadWeather(){
     $("row").innerHTML=h;
     $("stand").textContent="💧 = Niederschlagswahrscheinlichkeit. Wetter aktualisiert um "+hm(new Date())+". Zugdaten: Transitous, transitous.org/sources";
   })
-  .catch(function(){$("row").innerHTML='<div class="slot now"><div class="lbl">Wetter nicht erreichbar. Prüfe die Internetverbindung des iPads.</div></div>'});
+  .catch(function(){
+    $("row").innerHTML='<div class="slot now"><div class="lbl">Wetter nicht erreichbar. Prüfe die Internetverbindung des iPads.</div></div>';
+  });
 }
 
 /* ---------- Züge ---------- */
@@ -130,7 +159,8 @@ function stopId(text,must){
     var b=a.filter(function(x){return /Hbf|Bahnhof/.test(x.name)});
     var h=b[0]||a[0];
     if(!h)throw new Error("Haltestelle nicht gefunden: "+text);
-    IDS[text]=h.id;return h.id;
+    IDS[text]=h.id;
+    return h.id;
   });
 }
 
@@ -169,7 +199,8 @@ function loadTrains(){
       });
     });
     out.sort(function(x,y){return x.dep-y.dep});
-    TRAINS=out;renderTrains();
+    TRAINS=out;
+    renderTrains();
   })
   .catch(function(e){
     if(!TRAINS)$("trains").innerHTML='<div class="tmsg">Zugdaten nicht erreichbar ('+(e&&e.message?e.message:"Fehler")+'). Die Seite versucht es automatisch erneut.</div>';
@@ -178,25 +209,53 @@ function loadTrains(){
 
 /* ---------- Autoverkehr ---------- */
 var CFGD = null;
-function loadCfg(){try{CFGD=JSON.parse(localStorage.getItem("dash.cfg")||"null")}catch(e){CFGD=null}}
-function saveCfg(c){CFGD=c;try{localStorage.setItem("dash.cfg",JSON.stringify(c))}catch(e){}}
-function openSetup(){
-  $("fk").value=CFGD?CFGD.key:"";$("ff").value=CFGD?CFGD.from:"";$("ft").value=CFGD?CFGD.to:"";
-  $("fmsg").textContent="";$("setup").style.display="flex";
+
+function loadCfg(){
+  try{CFGD=JSON.parse(localStorage.getItem("dash.cfg")||"null")}
+  catch(e){CFGD=null}
 }
+
+function saveCfg(c){
+  CFGD=c;
+  try{localStorage.setItem("dash.cfg",JSON.stringify(c))}
+  catch(e){}
+}
+
+function openSetup(){
+  $("fk").value=CFGD?CFGD.key:"";
+  $("ff").value=CFGD?CFGD.from:"";
+  $("ft").value=CFGD?CFGD.to:"";
+  $("fmsg").textContent="";
+  $("setup").style.display="flex";
+}
+
 function saveSetup(){
   var c={key:$("fk").value.trim(),from:$("ff").value.trim(),to:$("ft").value.trim()};
-  if(!c.key||!c.from||!c.to){$("fmsg").textContent="Bitte alle drei Felder ausfüllen.";return}
-  saveCfg(c);$("setup").style.display="none";loadDrive();
+  if(!c.key||!c.from||!c.to){
+    $("fmsg").textContent="Bitte alle drei Felder ausfüllen.";
+    return;
+  }
+  saveCfg(c);
+  $("setup").style.display="none";
+  loadDrive();
 }
+
 function geocode(q,key){
   return fetch("https://api.tomtom.com/search/2/geocode/"+encodeURIComponent(q)+".json?key="+encodeURIComponent(key)+"&countrySet=DE&limit=1")
   .then(function(r){if(!r.ok)throw new Error("Adresssuche "+r.status);return r.json()})
-  .then(function(d){var x=d.results&&d.results[0];if(!x)throw new Error("Adresse nicht gefunden: "+q);return x.position.lat+","+x.position.lon});
+  .then(function(d){
+    var x=d.results&&d.results[0];
+    if(!x)throw new Error("Adresse nicht gefunden: "+q);
+    return x.position.lat+","+x.position.lon;
+  });
 }
+
 function loadDrive(){
   var c=CFGD;
-  if(!c||!c.key){$("drive").innerHTML='<div class="tmsg">Noch nicht eingerichtet. Tippe unten auf „Einstellungen".</div>';return}
+  if(!c||!c.key){
+    $("drive").innerHTML='<div class="tmsg">Noch nicht eingerichtet. Tippe unten auf „Einstellungen".</div>';
+    return;
+  }
   Promise.all([c.fp?Promise.resolve(c.fp):geocode(c.from,c.key),c.tp?Promise.resolve(c.tp):geocode(c.to,c.key)])
   .then(function(p){
     if(!c.fp||!c.tp){c.fp=p[0];c.tp=p[1];saveCfg(c)}
@@ -210,13 +269,209 @@ function loadDrive(){
     else st='<span class="ts bad">Stau, +'+dl+' Min</span>';
     $("drive").innerHTML='<div class="dr"><span class="dt">'+min+' Min</span><span class="dd">'+km+' km</span>'+st+'</div>';
   })
-  .catch(function(e){$("drive").innerHTML='<div class="tmsg">Verkehrsdaten nicht erreichbar ('+(e&&e.message?e.message:"Fehler")+'). Prüfe Schlüssel und Adressen unter „Einstellungen".</div>'});
+  .catch(function(e){
+    $("drive").innerHTML='<div class="tmsg">Verkehrsdaten nicht erreichbar ('+(e&&e.message?e.message:"Fehler")+'). Prüfe Schlüssel und Adressen unter „Einstellungen".</div>';
+  });
 }
 
-tick();setInterval(tick,10000);
-loadWeather();setInterval(loadWeather,900000);
-loadTrains();setInterval(loadTrains,300000);
-loadCfg();if(!CFGD)openSetup();loadDrive();setInterval(loadDrive,180000);
+/* ---------- Radio ---------- */
+var RADIO = [
+  {name:"Antenne Münster", q:"Antenne Münster", must:/M(ü|ue)nster/i},
+  {name:"1LIVE", url:"https://wdr-1live-live.icecastssl.wdr.de/wdr/1live/live/mp3/128/stream.mp3"},
+  {name:"1LIVE diggi", url:"https://wdr-1live-diggi.icecastssl.wdr.de/wdr/1live/diggi/mp3/128/stream.mp3"},
+  {name:"ENERGY", q:"Energy NRW", must:/energy/i}
+];
+
+var RB = ["https://de1.api.radio-browser.info","https://de2.api.radio-browser.info","https://fi1.api.radio-browser.info"];
+var CUR = -1;
+var PENDING = -1;
+var REQUESTS = {};
+
+function msg(t){$("rmsg").textContent=t}
+
+function cacheGet(n){
+  try{return (JSON.parse(localStorage.getItem("dash.radio")||"{}"))[n]||""}
+  catch(e){return ""}
+}
+
+function cacheSet(n,u){
+  try{
+    var o=JSON.parse(localStorage.getItem("dash.radio")||"{}");
+    o[n]=u;
+    localStorage.setItem("dash.radio",JSON.stringify(o));
+  }catch(e){}
+}
+
+function mark(){
+  RADIO.forEach(function(st,i){
+    var b=$("rb"+i);
+    if(!b)return;
+    b.className="rb"+(i===CUR?" on":"")+(!st.url?" wait":"");
+    b.setAttribute("aria-pressed",i===CUR?"true":"false");
+  });
+}
+
+function rbFind(st,i){
+  if(i>=RB.length)return Promise.reject(new Error("Senderverzeichnis nicht erreichbar"));
+  return fetch(RB[i]+"/json/stations/byname/"+encodeURIComponent(st.q)+"?hidebroken=true&order=votes&reverse=true&limit=30")
+  .then(function(r){if(!r.ok)throw new Error("http");return r.json()})
+  .then(function(l){
+    var ok=l.filter(function(x){
+      return x.countrycode==="DE"&&st.must.test(x.name)&&/^https:/.test(x.url_resolved||"")&&x.lastcheckok===1;
+    });
+    if(!ok.length){
+      var e=new Error("Kein HTTPS-Stream für "+st.name+" gefunden");
+      e.final=true;
+      throw e;
+    }
+    return ok[0].url_resolved;
+  })
+  .catch(function(e){
+    if(e&&e.final)throw e;
+    return rbFind(st,i+1);
+  });
+}
+
+function startStation(i){
+  var st=RADIO[i],a=$("player");
+  if(!st||!st.url){
+    PENDING=i;
+    msg(st?st.name+": Stream-Adresse wird gesucht …":"");
+    return;
+  }
+  PENDING=-1;
+  CUR=i;
+  mark();
+  msg("Verbinde mit "+st.name+" …");
+  a.pause();
+  a.src=st.url;
+  a.load();
+  var pr=a.play();
+  if(pr&&pr.catch)pr.catch(function(){
+    if(CUR===i){
+      msg("Wiedergabe nicht möglich. Prüfe die Internetverbindung und tippe erneut.");
+      CUR=-1;
+      mark();
+    }
+  });
+}
+
+function resolveStation(st){
+  if(REQUESTS[st.name])return REQUESTS[st.name];
+  var cached=cacheGet(st.name);
+  if(cached&&!st.url){
+    st.url=cached;
+    mark();
+  }
+  REQUESTS[st.name]=rbFind(st,0).then(function(u){
+    st.url=u;
+    cacheSet(st.name,u);
+    mark();
+    var index=RADIO.indexOf(st);
+    if(PENDING===index)msg(st.name+": Stream bereit – bitte zum Starten erneut tippen.");
+    return u;
+  }).catch(function(e){
+    if(!st.url){
+      var index=RADIO.indexOf(st);
+      if(PENDING===index)PENDING=-1;
+      msg(e.message);
+      mark();
+    }
+    throw e;
+  }).then(function(v){
+    delete REQUESTS[st.name];
+    return v;
+  },function(e){
+    delete REQUESTS[st.name];
+    throw e;
+  });
+  REQUESTS[st.name].catch(function(){});
+  return REQUESTS[st.name];
+}
+
+function playStation(i){
+  var st=RADIO[i],a=$("player");
+  if(!st)return;
+
+  if(CUR===i||PENDING===i){
+    a.pause();
+    a.removeAttribute("src");
+    a.load();
+    CUR=-1;
+    PENDING=-1;
+    mark();
+    msg("");
+    return;
+  }
+
+  a.pause();
+
+  if(!st.url){
+    PENDING=i;
+    CUR=-1;
+    mark();
+    msg(st.name+": Stream-Adresse wird gesucht …");
+    resolveStation(st);
+    return;
+  }
+
+  startStation(i);
+}
+
+function buildRadio(){
+  var h="";
+  RADIO.forEach(function(st,i){
+    h+='<button type="button" class="rb" id="rb'+i+'" onclick="playStation('+i+')">'+st.name+'</button>';
+  });
+  h+='<button type="button" class="rb" id="air" onclick="airPicker()">AirPlay</button>';
+  $("radio").innerHTML=h;
+
+  var a=$("player");
+  a.addEventListener("playing",function(){
+    if(CUR>=0)msg("Läuft: "+RADIO[CUR].name);
+  });
+  a.addEventListener("waiting",function(){
+    if(CUR>=0)msg("Puffert …");
+  });
+  a.addEventListener("error",function(){
+    if(CUR>=0){
+      msg("Stream nicht erreichbar: "+RADIO[CUR].name);
+      CUR=-1;
+      mark();
+    }
+  });
+
+  mark();
+  RADIO.forEach(function(st){
+    if(st.q)resolveStation(st);
+  });
+}
+
+function airPicker(){
+  var a=$("player");
+  if(typeof a.webkitShowPlaybackTargetPicker==="function"){
+    try{
+      a.webkitShowPlaybackTargetPicker();
+    }catch(e){
+      msg("AirPlay-Auswahl konnte nicht geöffnet werden. Bitte erneut tippen.");
+    }
+  }else{
+    msg("Diese Safari-Version bietet keine AirPlay-Auswahl an. Öffne das Kontrollzentrum und wähle dort „Küche“.");
+  }
+}
+
+// ===== Start =====
+tick();
+setInterval(tick,10000);
+loadWeather();
+setInterval(loadWeather,900000);
+loadTrains();
+setInterval(loadTrains,300000);
+loadCfg();
+if(!CFGD)openSetup();
+loadDrive();
+setInterval(loadDrive,180000);
+buildRadio();
 </script>
 </body>
 </html>
