@@ -1,198 +1,178 @@
 from pathlib import Path
 import re
 
-src_path = Path("/mnt/data/Muenster_Dashboard_aktualisiert.html")
-src = src_path.read_text(encoding="utf-8")
+src = Path("/mnt/data/Eingefügter Text(2).txt").read_text(encoding="utf-8")
 
-css = r'''<style>
+new_css = r'''<style>
 :root{
-  --bg:#000;--card:#1C1C1E;--card2:#2C2C2E;--ink:#F5F5F7;
-  --soft:#98989D;--line:rgba(255,255,255,.10);--blue:#0A84FF;
-  --green:#30D158;--orange:#FF9F0A;--red:#FF453A;
+  color-scheme:dark;
+  --bg:#000000;
+  --card:#1c1c1e;
+  --card-2:#2c2c2e;
+  --ink:#f5f5f7;
+  --soft:#98989f;
+  --line:rgba(255,255,255,.10);
+  --blue:#0a84ff;
+  --green:#30d158;
+  --orange:#ff9f0a;
+  --red:#ff453a;
+  --shadow:0 12px 34px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.035);
 }
 *{box-sizing:border-box}
-html{min-height:100%;background:var(--bg)}
+html,body{margin:0;min-height:100%;width:100%;background:var(--bg);color:var(--ink)}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{
-  min-height:100vh;margin:0;padding:14px 18px;
-  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);
-  grid-template-areas:
-    "clock weather"
-    "date weather"
-    "trains drive"
-    "radio radio"
-    "stand foot";
-  grid-template-rows:auto auto minmax(170px,1fr) auto auto;
-  gap:12px;
-  background:#000;color:var(--ink);
-  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Arial,sans-serif;
-  -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;
-  text-align:left;
+  min-height:100svh;
+  padding:max(18px,env(safe-area-inset-top)) max(22px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(22px,env(safe-area-inset-left));
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;
+  text-align:left;overflow-x:hidden;
 }
-#time{grid-area:clock}
-#date{grid-area:date}
-#row{grid-area:weather}
-.trains:nth-of-type(4){grid-area:trains}
-.trains:nth-of-type(5){grid-area:drive}
-.radio{grid-area:radio}
-#stand{grid-area:stand}
-#foot{grid-area:foot}
-#time,#date,#row,.trains,.radio{
-  min-width:0;margin:0;padding:18px;border-radius:22px;
-  background:var(--card);border:1px solid var(--line);
-  box-shadow:0 8px 24px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.035);
-}
-#time{
-  display:flex;align-items:center;justify-content:flex-start;
-  font-size:clamp(58px,8vw,100px);font-weight:700;line-height:1;
-  letter-spacing:-4px;font-variant-numeric:tabular-nums;color:#fff;
-  background:linear-gradient(145deg,rgba(10,132,255,.16),rgba(28,28,30,.98));
-}
-#date{display:flex;align-items:center;color:var(--soft);font-size:20px;font-weight:550}
-#row{
-  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
-  align-content:center;gap:8px;
-}
-.slot{
-  min-width:0;min-height:135px;margin:0;padding:12px 6px;
-  border-radius:16px;border:1px solid rgba(255,255,255,.06);
-  background:rgba(255,255,255,.035);text-align:center;
-}
-.slot.now{background:rgba(10,132,255,.12);border-color:rgba(10,132,255,.4)}
-.lbl{font-size:13px;color:var(--soft);font-weight:600}
-.now .lbl{color:#64B5FF}
-.ic{font-size:30px;margin:11px 0 7px;line-height:1}
-.t{font-size:clamp(22px,2.6vw,34px);font-weight:700;line-height:1;letter-spacing:-1px}
-.c{font-size:12px;color:var(--soft);margin-top:7px}
-.p{font-size:11px;color:#64B5FF;margin-top:9px;font-weight:600}
-.trains{width:auto;max-width:none;padding:18px;text-align:left}
-.th{font-size:13px;line-height:1.3;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--soft);margin:0 0 12px}
-.tr{display:flex;align-items:center;flex-wrap:wrap;gap:5px 10px;padding:10px 0;margin:0;border-top:1px solid rgba(255,255,255,.07)}
-.tt{width:65px;font-size:25px;font-weight:700;letter-spacing:-.6px;font-variant-numeric:tabular-nums}
-.tl{width:50px;font-size:15px;font-weight:650}
-.tg{width:80px;font-size:12px;color:var(--soft);font-weight:550}
-.ta{width:90px;font-size:12px;color:var(--soft)}
-.ts{font-size:12px;font-weight:700;color:var(--green)}
-.ts.late{color:var(--orange)}.ts.bad{color:var(--red)}.ts.plan{color:var(--soft);font-weight:500}
-.tmsg{font-size:14px;line-height:1.45;color:var(--soft)}
-.dr{display:flex;align-items:baseline;flex-wrap:wrap;gap:8px 14px;padding:12px 0;border-top:1px solid rgba(255,255,255,.07)}
-.dt{width:auto;font-size:clamp(34px,4vw,50px);font-weight:750;letter-spacing:-2px}
-.dd{width:auto;font-size:14px;color:var(--soft)}
-.radio{display:flex;flex-wrap:wrap;gap:9px;align-items:stretch}
-.rb{
-  flex:1 1 145px;min-width:0;min-height:54px;padding:11px 12px;
-  border:1px solid rgba(255,255,255,.11);border-radius:14px;
-  background:var(--card2);color:var(--ink);
-  font:650 15px -apple-system,BlinkMacSystemFont,"SF Pro Text",Arial,sans-serif;
-  white-space:normal;-webkit-appearance:none;appearance:none;
-  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
-}
-.rb:active,#gear:active,#setup button:active{opacity:.75;transform:scale(.98)}
-.rb.on{background:var(--blue);border-color:var(--blue);color:#fff}
-.rb.wait{opacity:.65}
-#air{color:#64B5FF;background:rgba(10,132,255,.11);border-color:rgba(10,132,255,.32)}
-#player{display:none}
-#foot{display:flex;flex-direction:column;justify-content:center;align-items:flex-end;gap:8px;min-width:0}
-#rmsg{font-size:12px;color:var(--soft);text-align:right;min-height:16px}
-#gear{
-  display:inline-flex;align-items:center;justify-content:center;
-  min-width:44px;min-height:44px;padding:0 15px;
-  border:1px solid var(--line);border-radius:12px;
-  background:var(--card2);color:#64B5FF;font-size:14px;font-weight:600;
-  text-decoration:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
-}
-#stand{align-self:center;color:var(--soft);font-size:11px;line-height:1.35}
-#setup{
-  display:none;position:fixed;inset:0;z-index:10;padding:20px;
-  flex-direction:column;justify-content:center;align-items:center;
-  background:rgba(0,0,0,.58);
-  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
-}
-#setup .box{
-  width:100%;max-width:520px;padding:26px;
-  border:1px solid rgba(255,255,255,.16);border-radius:24px;
-  background:rgba(44,44,46,.96);
-  -webkit-backdrop-filter:blur(25px) saturate(180%);
-  backdrop-filter:blur(25px) saturate(180%);
-  box-shadow:0 24px 70px rgba(0,0,0,.55);text-align:left;
-}
-#setup h1{font-size:26px;margin:0 0 8px}
-#setup p{font-size:14px;line-height:1.45;color:var(--soft);margin:0 0 18px}
-#setup label{display:block;font-size:13px;font-weight:600;margin:14px 0 6px;color:#D1D1D6}
-#setup input{width:100%;min-height:48px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#1C1C1E;color:var(--ink);font-size:16px}
-#setup button{width:100%;min-height:48px;margin-top:20px;padding:10px 20px;border:0;border-radius:12px;background:var(--blue);color:#fff;font-size:16px;font-weight:650}
+.dashboard{width:100%;max-width:1440px;margin:0 auto;display:grid;grid-template-columns:1.05fr 1.35fr 1fr;grid-template-rows:auto auto minmax(0,1fr) auto;gap:16px;flex:1;min-height:0}
+.topbar{grid-column:1/-1;display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding:2px 4px 6px}
+.clock-wrap{display:flex;flex-direction:column;gap:4px}
+.time{font-size:clamp(54px,7.5vw,88px);line-height:.95;font-weight:700;letter-spacing:-.065em;font-variant-numeric:tabular-nums}
+.date{font-size:clamp(16px,1.7vw,21px);color:var(--soft);font-weight:500}
+.city-label{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);font-weight:650;padding-bottom:8px}
+.card{min-width:0;background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:18px 20px;overflow:hidden}
+.card-title{font-size:15px;font-weight:650;letter-spacing:.01em;color:var(--soft);margin:0 0 12px}
+.weather-card{grid-column:1/-1;padding:15px 18px}
+#row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;width:100%}
+.slot{min-width:0;text-align:center;padding:12px 8px 10px;background:var(--card-2);border:1px solid rgba(255,255,255,.045);border-radius:16px}
+.slot.now{background:linear-gradient(145deg,rgba(10,132,255,.20),rgba(44,44,46,.92));border-color:rgba(10,132,255,.32)}
+.lbl{font-size:14px;color:var(--soft);font-weight:600}
+.now .lbl{color:#64b5ff}
+.ic{font-size:30px;line-height:1.2;margin:7px 0 5px}
+.t{font-size:clamp(25px,3vw,34px);font-weight:700;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.c{font-size:12px;color:var(--soft);margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.p{font-size:12px;color:#64b5ff;margin-top:8px;font-weight:600}
+.trains{min-width:0;margin:0;padding:18px 20px;background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);text-align:left}
+.trains:nth-of-type(3){grid-column:1/3}
+.trains:nth-of-type(4){grid-column:3/4}
+.th{font-size:15px;font-weight:650;color:var(--soft);margin:0 0 14px}
+.tr{display:grid;grid-template-columns:66px 55px 82px 1fr auto;align-items:center;gap:8px;padding:9px 0;border-top:1px solid rgba(255,255,255,.07)}
+.tt{font-size:25px;font-weight:700;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.tl{font-size:16px;font-weight:650}
+.tg{font-size:13px;color:var(--soft)}
+.ta{font-size:13px;color:var(--soft)}
+.ts{font-size:13px;font-weight:650;color:var(--green);white-space:nowrap}
+.ts.late{color:var(--orange)}
+.ts.bad{color:var(--red)}
+.ts.plan{color:var(--soft);font-weight:500}
+.tmsg{font-size:14px;line-height:1.45;color:var(--soft);padding:4px 0}
+.dr{display:flex;align-items:baseline;flex-wrap:wrap;gap:12px}
+.dt{font-size:clamp(30px,3.6vw,42px);font-weight:750;letter-spacing:-.05em;font-variant-numeric:tabular-nums}
+.dd{font-size:14px;color:var(--soft)}
+#drive .ts{margin-left:auto}
+.radio-card{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:14px 18px}
+.radio-heading{font-size:14px;color:var(--soft);font-weight:650;white-space:nowrap}
+.radio{display:flex;flex:1;min-width:0;gap:8px;margin:0}
+.rb{flex:1;min-width:0;min-height:48px;padding:10px 12px;font:650 15px -apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;white-space:nowrap;border:1px solid var(--line);border-radius:14px;background:var(--card-2);color:var(--ink);cursor:pointer;touch-action:manipulation;transition:background .16s ease,border-color .16s ease,transform .12s ease}
+.rb.on{background:rgba(10,132,255,.22);border-color:rgba(10,132,255,.65);color:#7dc1ff}
+.rb.wait{opacity:.58}
+.rb:active,#gear:active,button:active{transform:scale(.97);filter:brightness(1.18)}
+#air{color:#64b5ff}
+.footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 5px;min-height:38px}
+#stand{font-size:11px;color:#73737a;line-height:1.35}
+#foot{display:flex;align-items:center;gap:14px;font-size:13px;color:var(--soft)}
+#rmsg{font-size:12px;color:var(--soft);text-align:right}
+#gear{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 12px;color:#64b5ff;font-size:14px;font-weight:600;text-decoration:none;border-radius:12px;cursor:pointer;touch-action:manipulation}
+#gear:active{background:rgba(10,132,255,.15)}
+#setup{display:none;position:fixed;inset:0;background:rgba(0,0,0,.48);backdrop-filter:blur(25px) saturate(180%);-webkit-backdrop-filter:blur(25px) saturate(180%);padding:24px;flex-direction:column;justify-content:center;align-items:center;z-index:10}
+#setup .box{width:min(100%,560px);text-align:left;background:rgba(38,38,40,.88);border:1px solid rgba(255,255,255,.14);border-radius:26px;padding:30px;box-shadow:0 24px 80px rgba(0,0,0,.55)}
+#setup h1{font-size:28px;letter-spacing:-.04em;margin:0 0 8px}
+#setup p{font-size:15px;line-height:1.45;color:var(--soft);margin:0 0 22px}
+#setup label{display:block;font-size:14px;font-weight:600;color:#d1d1d6;margin:16px 0 7px}
+#setup input{width:100%;min-height:48px;font:16px -apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;padding:12px 14px;border:1px solid rgba(255,255,255,.13);border-radius:12px;background:#2c2c2e;color:var(--ink);outline:none}
+#setup input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(10,132,255,.18)}
+#setup button{width:100%;min-height:50px;font:650 16px -apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;padding:12px 20px;margin-top:24px;border:0;border-radius:14px;background:var(--blue);color:#fff;cursor:pointer;touch-action:manipulation}
 #fmsg{font-size:13px;color:var(--red);margin-top:12px}
-@media (max-width:760px),(orientation:portrait){
-  body{
-    display:flex;flex-direction:column;align-items:stretch;
-    padding:10px;gap:10px;
-  }
-  #time,#date,#row,.trains,.radio{width:100%;padding:15px}
-  #time{min-height:115px;font-size:76px}
-  #date{min-height:54px;font-size:17px}
-  #row{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
-  .slot{min-height:120px;padding:10px 3px}
-  .ic{font-size:24px}.t{font-size:23px}.lbl{font-size:11px}.c{font-size:10px}.p{font-size:9px}
-  #foot{align-items:stretch}
-  #rmsg{text-align:left}
-  #stand{order:10;text-align:center}
+@media (orientation:landscape) and (min-width:900px){
+  body{height:100svh}
+  .dashboard{grid-template-rows:auto auto minmax(150px,1fr) auto}
 }
-@media (max-height:700px) and (orientation:landscape){
-  body{padding:8px 12px;gap:8px;grid-template-rows:auto auto minmax(140px,1fr) auto auto}
-  #time,#date,#row,.trains,.radio{padding:13px}
-  #time{font-size:72px}
-  .slot{min-height:108px;padding:8px 3px}
-  .ic{font-size:23px;margin:7px 0 5px}
-  .t{font-size:24px}
-  .th{margin-bottom:7px}
-  .tr{padding:7px 0}
+@media (max-width:900px){
+  body{padding:16px}
+  .dashboard{grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto auto auto;gap:12px}
+  .topbar,.weather-card,.radio-card{grid-column:1/-1}
+  .trains:nth-of-type(3){grid-column:1/-1}
+  .trains:nth-of-type(4){grid-column:1/-1}
+  .radio-card{align-items:stretch;flex-direction:column;gap:8px}
+  .radio{flex-wrap:wrap}
+  .rb{flex:1 1 20%;min-width:90px}
+  .footer{align-items:flex-start;flex-direction:column}
 }
+@media (max-width:560px){
+  body{padding:12px}
+  .time{font-size:62px}
+  .card,.trains{padding:15px}
+  #row{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .slot:first-child{grid-column:1/-1}
+  .tr{grid-template-columns:58px 48px 66px 1fr;gap:5px}
+  .tt{font-size:21px}.tl{font-size:14px}.tg{font-size:11px}.ta{font-size:11px}
+  .tr .ts{grid-column:4;justify-self:start}
+  #setup{padding:14px}
+  #setup .box{padding:22px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>'''
 
-# Keep the original DOM structure and every original ID/function/API. Replace only CSS.
-src = re.sub(r'<style>.*?</style>', css, src, count=1, flags=re.S)
+src = re.sub(r'<style>.*?</style>', new_css, src, count=1, flags=re.S)
 
-# Add an early diagnostic handler and a fetch fallback for older Safari environments.
-needle = '<script>'
-compat = r'''<script>
-/* Kompatibilität und sichtbare Fehlermeldungen für ältere Safari-Versionen. */
-window.onerror = function(message, source, line) {
-  var status = document.getElementById("rmsg");
-  if (status) status.textContent = "JavaScript-Fehler: " + message + " (Zeile " + line + ")";
-  return false;
-};
-if (!window.fetch) {
-  window.fetch = function(url) {
-    return new Promise(function(resolve, reject) {
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", url, true);
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState !== 4) return;
-        resolve({
-          ok: xhr.status >= 200 && xhr.status < 300,
-          status: xhr.status,
-          json: function() {
-            return new Promise(function(res, rej) {
-              try { res(JSON.parse(xhr.responseText)); }
-              catch (e) { rej(e); }
-            });
-          }
-        });
-      };
-      xhr.onerror = function() { reject(new Error("Netzwerkfehler")); };
-      xhr.send(null);
-    });
-  };
-}
-</script>
+new_body = r'''<body>
+<div class="dashboard">
+  <header class="topbar">
+    <div class="clock-wrap">
+      <div class="time" id="time">--:--</div>
+      <div class="date" id="date"></div>
+    </div>
+    <div class="city-label">Münster · Übersicht</div>
+  </header>
+
+  <section class="card weather-card">
+    <div class="card-title">Wetter</div>
+    <div class="row" id="row"><div class="slot now"><div class="lbl">Wetter wird geladen …</div></div></div>
+  </section>
+
+  <section class="trains">
+    <div class="th">Züge · Münster Hbf nach Rheine</div>
+    <div id="trains"><div class="tmsg">Verbindungen werden geladen …</div></div>
+  </section>
+
+  <section class="trains">
+    <div class="th">Autoverkehr · Münster nach Ascheberg</div>
+    <div id="drive"><div class="tmsg">Verkehrslage wird geladen …</div></div>
+  </section>
+
+  <section class="card radio-card">
+    <div class="radio-heading">Radio</div>
+    <div class="radio" id="radio"></div>
+  </section>
+
+  <audio id="player" preload="none" playsinline x-webkit-airplay="allow"></audio>
+
+  <footer class="footer">
+    <div id="stand"></div>
+    <div id="foot"><span id="rmsg"></span><span id="gear" role="button" tabindex="0" onclick="openSetup()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSetup()}">Einstellungen</span></div>
+  </footer>
+</div>
+
+<div id="setup">
+  <div class="box">
+    <h1>Einstellungen</h1>
+    <p>Diese Angaben werden nur auf diesem iPad gespeichert, nicht in der Seite selbst.</p>
+    <label for="fk">TomTom-API-Schlüssel</label><input id="fk" type="text" autocapitalize="off" autocorrect="off">
+    <label for="ff">Startadresse (Auto)</label><input id="ff" type="text">
+    <label for="ft">Zieladresse (Auto)</label><input id="ft" type="text">
+    <button onclick="saveSetup()">Speichern</button>
+    <div id="fmsg"></div>
+  </div>
+</div>
 <script>'''
-src = src.replace(needle, compat, 1)
 
-# Preserve the old DOM and script; make sure the dashboard initialization reports startup.
-# Add no new API calls. A JS error is now visible instead of leaving permanent loading placeholders.
-out = Path("/mnt/data/Muenster_Dashboard_Apple_Design_Fehlerbehebung.html")
+src = re.sub(r'<body>.*?<script>', new_body, src, count=1, flags=re.S)
+
+out = Path("/mnt/data/Muenster_Dashboard_Apple_Design.html")
 out.write_text(src, encoding="utf-8")
-
-# Extract inline scripts and syntax-check with Node.
-scripts = re.findall(r'<script>(.*?)</script>', src, flags=re.S)
-Path("/tmp/dashboard_check.js").write_text("\n".join(scripts), encoding="utf-8")
-print("Erstellt:", out, "| Größe:", out.stat().st_size, "Bytes")
+print(f"Erstellt: {out} | {len(src):,} Zeichen")
