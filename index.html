@@ -41,7 +41,7 @@ body {
   max-width: 740px;
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: 16px;
 }
 
 /* Ganz oben zentral (keine Kachel) */
@@ -77,11 +77,11 @@ body {
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04);
 }
 
-/* Obere Reihe: Nachrichten links, Radio/AirPlay rechts */
+/* Obere Reihe: Nachrichten links, Radio & AirPlay rechts */
 .top-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 25px;
+  gap: 16px;
 }
 
 .th-sm {
@@ -234,7 +234,7 @@ body {
 .bottom-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 25px;
+  gap: 16px;
 }
 
 .trains, .drive-box {
@@ -255,7 +255,7 @@ body {
   flex-direction: column;
   padding: 10px 0;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  gap: 4px;
+  gap: 10px;
 }
 
 .tr:last-child, .dr:last-child {
@@ -622,7 +622,7 @@ function renderTrains(){
 function loadTrains(){
   Promise.all([stopId(FROM_TEXT,"Münster"),stopId(TO_TEXT,"Rheine")])
   .then(function(ids){
-    return fetch(API+"/v6/plan?fromPlace="+encodeURIComponent(ids[0])+"&toPlace="+encodeURIComponent(ids[1])+"&numItineraries=8&maxTransfers=0");
+    return fetch(API+"/v6/plan?fromPlace="+encodeURIComponent(ids[0])+"&toPlace="+encodeURIComponent(ids[1])+"&numItineraries=12&maxTransfers=0");
   })
   .then(function(r){if(!r.ok)throw new Error("Verbindungssuche "+r.status);return r.json()})
   .then(function(d){
@@ -630,11 +630,17 @@ function loadTrains(){
     (d.itineraries||[]).forEach(function(it){
       var legs=it.legs.filter(function(l){return l.mode!=="WALK"&&l.mode!=="BIKE"&&l.mode!=="CAR"});
       if(legs.length!==1||!/RAIL|TRAIN|LONG_DISTANCE|SUBURBAN/i.test(legs[0].mode))return;
-      var l=legs[0],dl=Math.round((new Date(l.startTime)-new Date(l.scheduledStartTime))/60000);
+      var l=legs[0];
+      var lineName = l.routeShortName || l.displayName || "";
+      
+      // Filter: Schließe Fernverkehr (ICE, IC, EC) aus und behalte nur Regionalverkehr (RE, RB, S)
+      if(/ICE|IC\b|EC\b|Intercity|Eurocity/i.test(lineName)) return;
+
+      var dl=Math.round((new Date(l.startTime)-new Date(l.scheduledStartTime))/60000);
       out.push({
         dep:new Date(l.startTime),arr:new Date(l.endTime),
         delay:isNaN(dl)?0:dl,live:!!l.realTime,cancelled:!!l.cancelled,
-        line:l.routeShortName||l.displayName||"Zug",
+        line:lineName||"Zug",
         track:(l.from&&(l.from.track||l.from.scheduledTrack))||""
       });
     });
