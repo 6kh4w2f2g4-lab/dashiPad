@@ -9,78 +9,175 @@
 <title>Münster</title>
 <style>
 :root {
-  --bg: #000000;
-  --surface: #1c1c1e;
-  --surface-hover: #2c2c2e;
-  --ink: #ffffff;
-  --soft: #8e8e93;
-  --line: rgba(255, 255, 255, 0.12);
-  --sea: #0a84ff;       /* Apple System Blue */
-  --late: #ff9f0a;      /* Apple System Orange */
-  --bad: #ff453a;       /* Apple System Red */
-  --success: #30d158;   /* Apple System Green */
+  --bg: #f2f2f7;
+  --surface: rgba(255, 255, 255, 0.75);
+  --surface-hover: rgba(255, 255, 255, 0.9);
+  --ink: #1c1c1e;
+  --soft: #6e6e73;
+  --line: rgba(255, 255, 255, 0.8);
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --sea: #007aff;       /* Apple System Blue */
+  --late: #ff9500;      /* Apple System Orange */
+  --bad: #ff3b30;       /* Apple System Red */
+  --success: #34c759;   /* Apple System Green */
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; }
+html, body { height: 100%; margin: 0; }
 body {
-  margin: 0;
   background: var(--bg);
   color: var(--ink);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 24px 20px;
+  overflow-y: auto;
+}
+
+.dashboard {
+  width: 100%;
+  max-width: 740px;
+  display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 24px 32px;
-  overflow-x: hidden;
+  gap: 16px;
+}
+
+/* Allgemeine Kachel (Liquid Glass Optik) */
+.card {
+  background: var(--surface);
+  backdrop-filter: blur(25px) saturate(180%);
+  -webkit-backdrop-filter: blur(25px) saturate(180%);
+  border: 1px solid var(--border-subtle);
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04);
+}
+
+/* Oben: Grid für Uhrzeit & Radio */
+.top-row {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 16px;
+}
+
+.time-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .time {
-  font-size: 88px;
+  font-size: 64px;
   font-weight: 700;
-  letter-spacing: -2px;
-  line-height: 1.1;
+  letter-spacing: -1.5px;
+  line-height: 1;
   color: var(--ink);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
 }
 
 .date {
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 500;
   color: var(--soft);
-  margin: 4px 0 20px;
+  margin-top: 8px;
   text-transform: capitalize;
+}
+
+.radio-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.th-sm {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--soft);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.radio {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rb {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  font: 600 15px -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rb:hover { background: var(--surface-hover); }
+
+.rb.on {
+  background: var(--sea);
+  border-color: var(--sea);
+  color: #fff;
+}
+
+.rb.wait { opacity: 0.65; }
+.rb:disabled { opacity: 0.55; }
+
+/* AirPlay zentral darunter */
+.airplay-row {
+  display: flex;
+  justify-content: center;
+}
+
+#air {
+  width: auto;
+  min-width: 200px;
+  justify-content: center;
+  color: var(--sea);
+  background: rgba(0, 122, 255, 0.08);
+  border-color: rgba(0, 122, 255, 0.2);
+}
+
+/* Wetter-Kachel (volle Breite) */
+.weather-card {
+  padding: 16px 20px;
 }
 
 .row {
   display: flex;
   width: 100%;
-  max-width: 960px;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 10px;
 }
 
 .slot {
   flex: 1;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  padding: 16px 8px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 12px 6px;
   text-align: center;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .slot.now {
   border-color: var(--sea);
-  background: rgba(10, 132, 255, 0.08);
+  background: rgba(0, 122, 255, 0.08);
 }
 
 .lbl {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--soft);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .now .lbl {
@@ -88,55 +185,37 @@ body {
   font-weight: 600;
 }
 
-.ic {
-  font-size: 36px;
-  margin: 6px 0;
+.ic { font-size: 28px; margin: 4px 0; }
+.t { font-size: 22px; font-weight: 600; line-height: 1; }
+.c { font-size: 12px; color: var(--soft); margin-top: 4px; }
+.p { font-size: 12px; color: var(--sea); margin-top: 4px; font-weight: 500; }
+
+/* Unten: Züge & Verkehr nebeneinander */
+.bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
 }
 
-.t {
-  font-size: 30px;
-  font-weight: 600;
-  line-height: 1;
-}
-
-.c {
-  font-size: 14px;
-  color: var(--soft);
-  margin-top: 6px;
-}
-
-.p {
-  font-size: 15px;
-  color: var(--sea);
-  margin-top: 6px;
-  font-weight: 500;
-}
-
-.trains {
-  width: 100%;
-  max-width: 960px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 22px;
-  padding: 20px;
-  margin-bottom: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  text-align: left;
+.trains, .drive-box {
+  display: flex;
+  flex-direction: column;
 }
 
 .th {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--soft);
-  margin-bottom: 14px;
-  letter-spacing: -0.3px;
+  margin-bottom: 12px;
+  letter-spacing: -0.2px;
 }
 
 .tr, .dr {
   display: flex;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--line);
+  flex-direction: column;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  gap: 4px;
 }
 
 .tr:last-child, .dr:last-child {
@@ -148,113 +227,87 @@ body {
   padding-top: 0;
 }
 
+.train-main, .drive-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
 .tt, .dt {
-  width: 130px;
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 600;
 }
 
 .tl, .dd {
-  width: 130px;
-  font-size: 18px;
+  font-size: 14px;
   color: var(--soft);
 }
 
-.tg {
-  width: 130px;
-  font-size: 18px;
-  font-weight: 500;
-}
-
-.ta {
-  width: 180px;
-  font-size: 18px;
+.train-sub {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
   color: var(--soft);
 }
+
+.tg { font-weight: 500; }
 
 .ts {
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 8px;
-  background: rgba(48, 209, 88, 0.15);
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(52, 199, 89, 0.15);
   color: var(--success);
 }
 
 .ts.late {
-  background: rgba(255, 159, 10, 0.15);
+  background: rgba(255, 149, 0, 0.15);
   color: var(--late);
 }
 
 .ts.bad {
-  background: rgba(255, 69, 58, 0.15);
+  background: rgba(255, 59, 48, 0.15);
   color: var(--bad);
 }
 
 .ts.plan {
-  background: rgba(142, 142, 147, 0.15);
+  background: rgba(110, 110, 115, 0.15);
   color: var(--soft);
   font-weight: 400;
 }
 
 .tmsg {
-  font-size: 16px;
+  font-size: 14px;
   color: var(--soft);
-  padding: 10px 0;
+  padding: 8px 0;
 }
 
-.radio {
+/* Footer & Stand */
+.footer-card {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  width: 100%;
-  max-width: 960px;
-  margin-bottom: 16px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 20px;
+  background: transparent;
+  box-shadow: none;
+  border: none;
 }
 
-.rb {
-  flex: 1 1 145px;
-  min-height: 52px;
-  padding: 12px 16px;
-  font: 600 16px -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--surface);
-  color: var(--ink);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-.rb:hover {
-  background: var(--surface-hover);
-}
-
-.rb.on {
-  background: var(--sea);
-  border-color: var(--sea);
-  color: #fff;
-}
-
-.rb.wait { opacity: 0.65; }
-.rb:disabled { opacity: 0.55; }
-
-#air {
-  color: var(--sea);
-  flex: 0 1 145px;
+#stand {
+  font-size: 12px;
+  color: var(--soft);
+  text-align: center;
 }
 
 #foot {
   width: 100%;
-  max-width: 960px;
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--soft);
-  margin-top: 4px;
-  padding: 0 4px;
 }
 
 #rmsg { margin-right: auto; }
@@ -267,22 +320,15 @@ body {
 }
 #gear:hover { text-decoration: underline; }
 
-#stand {
-  font-size: 13px;
-  color: var(--soft);
-  margin-top: 12px;
-  max-width: 960px;
-  text-align: center;
-}
-
+/* Einstellungs-Modal im Liquid Glass Stil */
 #setup {
   display: none;
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  padding: 40px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  padding: 30px;
   flex-direction: column;
   justify-content: center;
   align-items: center;
@@ -291,47 +337,47 @@ body {
 
 #setup .box {
   width: 100%;
-  max-width: 520px;
-  background: var(--surface);
-  border: 1px solid var(--line);
+  max-width: 460px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
   border-radius: 24px;
-  padding: 32px;
+  padding: 28px;
   text-align: left;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.15);
 }
 
 #setup h1 {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   color: var(--ink);
 }
 
 #setup p {
-  font-size: 15px;
+  font-size: 14px;
   color: var(--soft);
-  margin: 0 0 24px;
+  margin: 0 0 20px;
   line-height: 1.4;
 }
 
 #setup label {
   display: block;
-  font-size: 14px;
-  font-weight: 500;
-  margin: 16px 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 14px 0 4px;
   color: var(--soft);
 }
 
 #setup input {
   width: 100%;
-  font-size: 17px;
-  padding: 12px 16px;
-  border: 1px solid var(--line);
+  font-size: 16px;
+  padding: 10px 14px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.8);
   color: var(--ink);
   outline: none;
-  transition: border-color 0.2s;
 }
 
 #setup input:focus {
@@ -340,66 +386,77 @@ body {
 
 #setup button {
   width: 100%;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 600;
-  padding: 14px;
-  margin-top: 24px;
+  padding: 12px;
+  margin-top: 20px;
   border: 0;
   border-radius: 12px;
   background: var(--sea);
   color: #fff;
   cursor: pointer;
-  transition: opacity 0.2s;
 }
-
-#setup button:active { opacity: 0.8; }
 
 #fmsg {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--bad);
-  margin-top: 12px;
+  margin-top: 10px;
   text-align: center;
-}
-
-@media (orientation: portrait) {
-  .time { font-size: 76px; }
-  .ic { font-size: 32px; }
-  .t { font-size: 26px; }
-  .lbl { font-size: 14px; }
-  .p { font-size: 14px; }
-  .c { font-size: 13px; }
-  .tt, .dt { width: 100px; font-size: 22px; }
-  .tl, .dd { width: 90px; font-size: 15px; }
-  .tg { width: 80px; font-size: 15px; }
-  .ta { width: 120px; font-size: 15px; }
-  .ts { font-size: 13px; }
 }
 </style>
 </head>
 <body>
 
-<div class="time" id="time">--:--</div>
-<div class="date" id="date"></div>
-<div class="row" id="row"><div class="slot now"><div class="lbl">Wetter wird geladen …</div></div></div>
+<div class="dashboard">
 
-<div class="trains">
-  <div class="th">Münster Hbf nach Rheine</div>
-  <div id="trains"><div class="tmsg">Verbindungen werden geladen …</div></div>
+  <!-- Oben: Uhrzeit/Datum & Radio -->
+  <div class="top-row">
+    <div class="card time-card">
+      <div class="time" id="time">--:--</div>
+      <div class="date" id="date"></div>
+    </div>
+    <div class="card radio-card">
+      <div class="th-sm">Radio</div>
+      <div class="radio" id="radio"></div>
+    </div>
+  </div>
+
+  <!-- AirPlay zentriert darunter -->
+  <div class="airplay-row">
+    <button type="button" class="rb" id="air" onclick="airPicker()">AirPlay</button>
+  </div>
+
+  <!-- Wetter Kachel (volle Breite) -->
+  <div class="card weather-card">
+    <div class="row" id="row">
+      <div class="slot now"><div class="lbl">Wetter wird geladen …</div></div>
+    </div>
+  </div>
+
+  <!-- Unten: Züge & Verkehr nebeneinander -->
+  <div class="bottom-row">
+    <div class="card trains">
+      <div class="th">Münster Hbf → Rheine</div>
+      <div id="trains"><div class="tmsg">Verbindungen werden geladen …</div></div>
+    </div>
+    <div class="card drive-box">
+      <div class="th">Auto → Ascheberg</div>
+      <div id="drive"><div class="tmsg">Verkehrslage wird geladen …</div></div>
+    </div>
+  </div>
+
+  <!-- Footer & Stand -->
+  <div class="footer-card">
+    <div id="stand"></div>
+    <div id="foot">
+      <span id="rmsg"></span>
+      <span id="gear" onclick="openSetup()">Einstellungen</span>
+    </div>
+  </div>
+
 </div>
 
-<div class="trains">
-  <div class="th">Auto von Münster nach Ascheberg</div>
-  <div id="drive"><div class="tmsg">Verkehrslage wird geladen …</div></div>
-</div>
-
-<div class="radio" id="radio"></div>
 <audio id="player" preload="none" playsinline x-webkit-airplay="allow" airplay="allow"></audio>
-<div id="stand"></div>
-
-<div id="foot">
-  <span id="rmsg"></span>
-  <span id="gear" onclick="openSetup()">Einstellungen</span>
-</div>
 
 <div id="setup">
 <div class="box">
@@ -456,10 +513,10 @@ function loadWeather(){
       h+=slot(hrs[j].slice(11,16),wx(H.weathercode[j]),Math.round(H.temperature_2m[j]),H.precipitation_probability[j],false);
     }
     $("row").innerHTML=h;
-    $("stand").textContent="💧 = Niederschlagswahrscheinlichkeit. Wetter aktualisiert um "+hm(new Date())+". Zugdaten: Transitous, transitous.org/sources";
+    $("stand").textContent="💧 = Niederschlagswahrscheinlichkeit • Aktualisiert um "+hm(new Date())+" • Zugdaten: Transitous";
   })
   .catch(function(){
-    $("row").innerHTML='<div class="slot now"><div class="lbl">Wetter nicht erreichbar. Prüfe die Internetverbindung des iPads.</div></div>';
+    $("row").innerHTML='<div class="slot now"><div class="lbl">Wetter nicht erreichbar.</div></div>';
   });
 }
 
@@ -483,7 +540,7 @@ function trainRow(t){
   if(t.cancelled)st='<span class="ts bad">fällt aus</span>';
   else if(!t.live)st='<span class="ts plan">Fahrplan</span>';
   else st=t.delay>0?'<span class="ts late">+'+t.delay+' Min</span>':'<span class="ts">pünktlich</span>';
-  return '<div class="tr"><span class="tt">'+hm(t.dep)+'</span><span class="tl">'+t.line+'</span><span class="tg">'+"Gleis "+(t.track||"–")+'</span><span class="ta">an '+hm(t.arr)+'</span>'+st+'</div>';
+  return '<div class="tr"><div class="train-main"><span class="tt">'+hm(t.dep)+'</span><span class="tl">'+t.line+'</span></div><div class="train-sub"><span class="tg">'+"Gleis "+(t.track||"–")+'</span>'+st+'</div></div>';
 }
 
 function renderTrains(){
@@ -517,7 +574,7 @@ function loadTrains(){
     renderTrains();
   })
   .catch(function(e){
-    if(!TRAINS)$("trains").innerHTML='<div class="tmsg">Zugdaten nicht erreichbar ('+(e&&e.message?e.message:"Fehler")+'). Die Seite versucht es automatisch erneut.</div>';
+    if(!TRAINS)$("trains").innerHTML='<div class="tmsg">Zugdaten nicht erreichbar.</div>';
   });
 }
 
@@ -567,7 +624,7 @@ function geocode(q,key){
 function loadDrive(){
   var c=CFGD;
   if(!c||!c.key){
-    $("drive").innerHTML='<div class="tmsg">Noch nicht eingerichtet. Tippe unten auf „Einstellungen".</div>';
+    $("drive").innerHTML='<div class="tmsg">Nicht eingerichtet. Tippe unten auf „Einstellungen".</div>';
     return;
   }
   Promise.all([c.fp?Promise.resolve(c.fp):geocode(c.from,c.key),c.tp?Promise.resolve(c.tp):geocode(c.to,c.key)])
@@ -579,18 +636,18 @@ function loadDrive(){
   .then(function(d){
     var s=d.routes[0].summary,min=Math.round(s.travelTimeInSeconds/60),dl=Math.round((s.trafficDelayInSeconds||0)/60),km=Math.round(s.lengthInMeters/1000),st;
     if(dl<=2)st='<span class="ts">freie Fahrt</span>';
-    else if(dl<=7)st='<span class="ts late">zäher Verkehr, +'+dl+' Min</span>';
-    else st='<span class="ts bad">Stau, +'+dl+' Min</span>';
-    $("drive").innerHTML='<div class="dr"><span class="dt">'+min+' Min</span><span class="dd">'+km+' km</span>'+st+'</div>';
+    else if(dl<=7)st='<span class="ts late">+'+dl+' Min</span>';
+    else st='<span class="ts bad">Stau +'+dl+' Min</span>';
+    $("drive").innerHTML='<div class="dr"><div class="drive-main"><span class="dt">'+min+' Min</span><span class="dd">'+km+' km</span></div><div class="train-sub"><span>Verkehrsstatus</span>'+st+'</div></div>';
   })
   .catch(function(e){
-    $("drive").innerHTML='<div class="tmsg">Verkehrsdaten nicht erreichbar ('+(e&&e.message?e.message:"Fehler")+'). Prüfe Schlüssel und Adressen unter „Einstellungen".</div>';
+    $("drive").innerHTML='<div class="tmsg">Verkehrsdaten nicht erreichbar.</div>';
   });
 }
 
 /* ---------- Radio ---------- */
 var RADIO = [
-  {name:"Antenne Münster", q:"Antenne Münster", must:/M(ü|ue)nster/i},
+  {name:"Antenne MS", q:"Antenne Münster", must:/M(ü|ue)nster/i},
   {name:"1LIVE", url:"https://wdr-1live-live.icecastssl.wdr.de/wdr/1live/live/mp3/128/stream.mp3"},
   {name:"1LIVE diggi", url:"https://wdr-1live-diggi.icecastssl.wdr.de/wdr/1live/diggi/mp3/128/stream.mp3"},
   {name:"ENERGY", q:"Energy NRW", must:/energy/i}
@@ -634,7 +691,7 @@ function rbFind(st,i){
       return x.countrycode==="DE"&&st.must.test(x.name)&&/^https:/.test(x.url_resolved||"")&&x.lastcheckok===1;
     });
     if(!ok.length){
-      var e=new Error("Kein HTTPS-Stream für "+st.name+" gefunden");
+      var e=new Error("Kein HTTPS-Stream");
       e.final=true;
       throw e;
     }
@@ -650,20 +707,20 @@ function startStation(i){
   var st=RADIO[i],a=$("player");
   if(!st||!st.url){
     PENDING=i;
-    msg(st?st.name+": Stream-Adresse wird gesucht …":"");
+    msg(st?st.name+": Stream wird gesucht…":"");
     return;
   }
   PENDING=-1;
   CUR=i;
   mark();
-  msg("Verbinde mit "+st.name+" …");
+  msg("Verbinde mit "+st.name+"…");
   a.pause();
   a.src=st.url;
   a.load();
   var pr=a.play();
   if(pr&&pr.catch)pr.catch(function(){
     if(CUR===i){
-      msg("Wiedergabe nicht möglich. Prüfe die Internetverbindung und tippe erneut.");
+      msg("Wiedergabe nicht möglich.");
       CUR=-1;
       mark();
     }
@@ -682,7 +739,7 @@ function resolveStation(st){
     cacheSet(st.name,u);
     mark();
     var index=RADIO.indexOf(st);
-    if(PENDING===index)msg(st.name+": Stream bereit – bitte zum Starten erneut tippen.");
+    if(PENDING===index)msg(st.name+": Bereit – bitte erneut tippen.");
     return u;
   }).catch(function(e){
     if(!st.url){
@@ -724,7 +781,7 @@ function playStation(i){
     PENDING=i;
     CUR=-1;
     mark();
-    msg(st.name+": Stream-Adresse wird gesucht …");
+    msg(st.name+": Stream wird gesucht…");
     resolveStation(st);
     return;
   }
@@ -735,9 +792,8 @@ function playStation(i){
 function buildRadio(){
   var h="";
   RADIO.forEach(function(st,i){
-    h+='<button type="button" class="rb" id="rb'+i+'" onclick="playStation('+i+')">'+st.name+'</button>';
+    h+='<button type="button" class="rb" id="rb'+i+'" onclick="playStation('+i+')"><span>'+st.name+'</span></button>';
   });
-  h+='<button type="button" class="rb" id="air" onclick="airPicker()">AirPlay</button>';
   $("radio").innerHTML=h;
 
   var a=$("player");
@@ -745,11 +801,11 @@ function buildRadio(){
     if(CUR>=0)msg("Läuft: "+RADIO[CUR].name);
   });
   a.addEventListener("waiting",function(){
-    if(CUR>=0)msg("Puffert …");
+    if(CUR>=0)msg("Puffert…");
   });
   a.addEventListener("error",function(){
     if(CUR>=0){
-      msg("Stream nicht erreichbar: "+RADIO[CUR].name);
+      msg("Stream nicht erreichbar");
       CUR=-1;
       mark();
     }
@@ -767,10 +823,10 @@ function airPicker(){
     try{
       a.webkitShowPlaybackTargetPicker();
     }catch(e){
-      msg("AirPlay-Auswahl konnte nicht geöffnet werden. Bitte erneut tippen.");
+      msg("AirPlay-Auswahl fehlgeschlagen.");
     }
   }else{
-    msg("Diese Safari-Version bietet keine AirPlay-Auswahl an. Öffne das Kontrollzentrum und wähle dort „Küche“.");
+    msg("AirPlay in diesem Browser nicht verfügbar.");
   }
 }
 
