@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Münster">
+<title>Münster</title>
+<style>
+:root{--bg:#e9eef1;--ink:#13293d;--soft:#5b6f80;--line:#c5d1d9;--sea:#1b6f82}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif;-webkit-text-size-adjust:100%}
+body{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:24px}
+.time{font:500 220px/1 "Avenir Next Condensed","Avenir Next","Helvetica Neue",Arial,sans-serif;letter-spacing:-3px}
+.date{font-size:34px;color:var(--soft);margin:10px 0 56px}
+.wx{display:flex;align-items:center;padding-top:36px;border-top:2px solid var(--line)}
+#icon{font-size:110px;margin-right:28px}
+#temp{font-size:110px;font-weight:600;line-height:1;margin-right:48px}
+.info{text-align:left}
+#cond{font-size:34px;font-weight:600}
+#rain{font-size:28px;color:var(--sea);margin-top:8px}
+#rain2{font-size:22px;color:var(--soft);margin-top:4px}
+#stand{font-size:16px;color:var(--soft);margin-top:28px}
+@media (orientation:portrait){.time{font-size:170px}.wx{flex-direction:column}#icon,#temp{margin-right:0}.info{text-align:center;margin-top:16px}}
+</style>
+</head>
+<body>
+<div class="time" id="time">--:--</div>
+<div class="date" id="date"></div>
+<div class="wx">
+  <div id="icon"></div>
+  <div id="temp"></div>
+  <div class="info">
+    <div id="cond">Wetter wird geladen …</div>
+    <div id="rain"></div>
+    <div id="rain2"></div>
+  </div>
+</div>
+<div id="stand"></div>
+<script>
+// Münster
+var LAT = 51.96, LON = 7.63;
+var WX = [[0,"Klar","☀️"],[2,"Heiter","🌤️"],[3,"Bedeckt","☁️"],[48,"Nebel","🌫️"],[57,"Nieselregen","🌦️"],[67,"Regen","🌧️"],[77,"Schnee","❄️"],[82,"Schauer","🌦️"],[86,"Schneeschauer","🌨️"],[99,"Gewitter","⛈️"]];
+function $(id){return document.getElementById(id)}
+function hm(d){return d.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})}
+function wx(c){for(var i=0;i<WX.length;i++){if(c<=WX[i][0])return WX[i]}return WX[0]}
+
+function tick(){
+  var n=new Date();
+  $("time").textContent=hm(n);
+  $("date").textContent=n.toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"});
+}
+
+function loadWeather(){
+  fetch("https://api.open-meteo.com/v1/forecast?latitude="+LAT+"&longitude="+LON+"&current_weather=true&hourly=precipitation_probability&daily=precipitation_probability_max&timezone=auto&forecast_days=1")
+  .then(function(r){return r.json()})
+  .then(function(d){
+    var c=d.current_weather,w=wx(c.weathercode),idx=0,i,hrs=d.hourly.time;
+    for(i=0;i<hrs.length;i++){if(hrs[i].slice(0,13)===c.time.slice(0,13)){idx=i;break}}
+    $("icon").textContent=w[2];
+    $("temp").textContent=Math.round(c.temperature)+"°";
+    $("cond").textContent=w[1];
+    $("rain").textContent="Regenwahrscheinlichkeit "+d.hourly.precipitation_probability[idx]+" %";
+    $("rain2").textContent="heute höchstens "+d.daily.precipitation_probability_max[0]+" %";
+    $("stand").textContent="Wetter aktualisiert um "+hm(new Date());
+  })
+  .catch(function(){$("cond").textContent="Wetter nicht erreichbar";$("rain").textContent="Prüfe die Internetverbindung des iPads."});
+}
+
+tick();setInterval(tick,10000);
+loadWeather();setInterval(loadWeather,900000);
+</script>
+</body>
+</html>
